@@ -51,15 +51,19 @@ public class CMROUserServiceImpl implements CMROUserService {
 
     private final int tokenDurationMinutes;
 
+    private final int minTimeBeforeNewMail;
+
     @Autowired
     public CMROUserServiceImpl(CMROUserRepository userRepo, CMROUserAnswerRepository answerRepo,
             PasswordEncodingService passwordSvc, MailSendingService mailSendSvc,
-            @Value("${checkMyResearchOut.server.token-duration:30}") int tokenDurationMinutes) {
+            @Value("${checkMyResearchOut.server.token-duration:30}") int tokenDurationMinutes,
+            @Value("${checkMyResearchOut.mail.mail-timeout:5}") int minTimeBeforeNewMail) {
         this.userRepo = userRepo;
         this.answerRepo = answerRepo;
         this.passwordSvc = passwordSvc;
         this.mailSendSvc = mailSendSvc;
         this.tokenDurationMinutes = tokenDurationMinutes;
+        this.minTimeBeforeNewMail = minTimeBeforeNewMail;
     }
 
     @Override
@@ -95,6 +99,10 @@ public class CMROUserServiceImpl implements CMROUserService {
         if (user.getValidated()) {
             throw new IllegalArgumentException("User account already validated.");
         }
+        if (user.getTokenEmissionDateTime() != null && user.getTokenEmissionDateTime()
+                .plusMinutes(this.minTimeBeforeNewMail).isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException(String.format("A mail was already sent less than %d minutes ago. Please retry in a while.", minTimeBeforeNewMail));
+        }
         user = this.generateAndSetToken(user);
         this.mailSendSvc.sendAccountValidationMail(user);
     }
@@ -127,6 +135,10 @@ public class CMROUserServiceImpl implements CMROUserService {
         }
         if (!user.getValidated()) {
             throw new IllegalArgumentException("User account not validated.");
+        }
+        if (user.getTokenEmissionDateTime() != null && user.getTokenEmissionDateTime()
+                .plusMinutes(this.minTimeBeforeNewMail).isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException(String.format("A mail was already sent less than %d minutes ago. Please retry in a while.", minTimeBeforeNewMail));
         }
         user = this.generateAndSetToken(user);
         this.mailSendSvc.sendPasswordRenewalMail(user);

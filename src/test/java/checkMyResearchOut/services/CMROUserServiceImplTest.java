@@ -72,7 +72,7 @@ public class CMROUserServiceImplTest {
     @BeforeEach
     public void setUp() {
         this.mocks = MockitoAnnotations.openMocks(this);
-        this.userSvcImpl = new CMROUserServiceImpl(userRepo, answerRepo, passwordSvc, mailSendingSvc, 30);
+        this.userSvcImpl = new CMROUserServiceImpl(userRepo, answerRepo, passwordSvc, mailSendingSvc, 30, 5);
     }
 
     @AfterEach
