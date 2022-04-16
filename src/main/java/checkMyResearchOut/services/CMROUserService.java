@@ -45,6 +45,15 @@ public interface CMROUserService {
     CMROUser createUser(String mail, String lastname, String firstname, String clearPassword) throws IllegalArgumentException, DuplicateKeyException;
 
     /**
+     * Get a user by its id
+     *
+     * @param userId
+     * @return
+     * @throws NoSuchElementException
+     */
+    CMROUser getUserById(String userId) throws IllegalArgumentException, NoSuchElementException;
+    
+    /**
      * Get a user by mail
      *
      * @param mail

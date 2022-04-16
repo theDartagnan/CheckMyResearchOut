@@ -84,11 +84,19 @@ public class CMROUserServiceImpl implements CMROUserService {
     }
 
     @Override
+    public CMROUser getUserById(String userId) throws IllegalArgumentException, NoSuchElementException {
+        if (!StringUtils.hasText(userId)) {
+            throw new IllegalArgumentException("UserId cannot be blank.");
+        }
+        return this.userRepo.findById(userId).orElseThrow(() -> new NoSuchElementException("Unknown user id."));
+    }
+
+    @Override
     public CMROUser getUserByMail(String mail) throws IllegalArgumentException, NoSuchElementException {
         if (!StringUtils.hasText(mail)) {
             throw new IllegalArgumentException("Mail cannot be blank.");
         }
-        return this.userRepo.findByMail(mail).orElseThrow(() -> new NoSuchElementException("Unknown email"));
+        return this.userRepo.findByMail(mail).orElseThrow(() -> new NoSuchElementException("Unknown email."));
     }
 
     @Override
