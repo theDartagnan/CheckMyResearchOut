@@ -30,6 +30,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -47,6 +48,9 @@ public class MailSendingServiceImplTest {
 
     @Autowired
     private MailSendingServiceImpl mailSendingSvc;
+    
+    @Value("${checkMyResearchOut.mail.reply-to}")
+    private String replyTo;
 
     public MailSendingServiceImplTest() {
     }
@@ -92,7 +96,7 @@ public class MailSendingServiceImplTest {
         assertThat(server.getReceivedEmails()).hasSize(1);
         System.out.println("Check mail information");
         SmtpMessage messageRecevied = server.getReceivedEmails().get(0);
-        assertThat(messageRecevied.getHeaderValue("From")).isEqualTo("noreply@mail.com");
+        assertThat(messageRecevied.getHeaderValue("From")).isEqualTo(this.replyTo);
         assertThat(messageRecevied.getHeaderValue("To")).isEqualTo(mail);
         assertThat(messageRecevied.getHeaderValue("Cc")).isNull();
         assertThat(messageRecevied.getHeaderValue("Subject")).isEqualTo("Validation de compte - Viens voir mes recherches");
@@ -122,7 +126,7 @@ public class MailSendingServiceImplTest {
         assertThat(server.getReceivedEmails()).hasSize(1);
         System.out.println("Check mail information");
         SmtpMessage messageRecevied = server.getReceivedEmails().get(0);
-        assertThat(messageRecevied.getHeaderValue("From")).isEqualTo("noreply@mail.com");
+        assertThat(messageRecevied.getHeaderValue("From")).isEqualTo(this.replyTo);
         assertThat(messageRecevied.getHeaderValue("To")).isEqualTo(mail);
         assertThat(messageRecevied.getHeaderValue("Cc")).isNull();
         assertThat(messageRecevied.getHeaderValue("Subject")).isEqualTo("Renouvellement de mot de passe - Viens voir mes recherches");
