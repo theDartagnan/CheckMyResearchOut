@@ -92,6 +92,16 @@ public class CMROUserServiceImpl implements CMROUserService {
     }
 
     @Override
+    public boolean hasCurrentValidationProcess(CMROUser user) throws IllegalArgumentException {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null.");
+        }
+        return user.getValidated()
+                && user.getValidationToken() != null && user.getTokenEmissionDateTime() != null
+                && user.getTokenEmissionDateTime().plusMinutes(this.tokenDurationMinutes).isAfter(LocalDateTime.now());
+    }
+
+    @Override
     public void sendValidationEmail(CMROUser user) throws IllegalArgumentException, MailException, MessagingException {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null.");
@@ -126,6 +136,16 @@ public class CMROUserServiceImpl implements CMROUserService {
         user.setValidationToken(null);
         user.setTokenEmissionDateTime(null);
         this.userRepo.save(user);
+    }
+
+    @Override
+    public boolean hasCurrentRenewalPasswordProcess(CMROUser user) throws IllegalArgumentException {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null.");
+        }
+        return !user.getValidated()
+                && user.getValidationToken() != null && user.getTokenEmissionDateTime() != null
+                && user.getTokenEmissionDateTime().plusMinutes(this.tokenDurationMinutes).isAfter(LocalDateTime.now());
     }
 
     @Override

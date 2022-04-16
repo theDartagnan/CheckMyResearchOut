@@ -54,6 +54,15 @@ public interface CMROUserService {
     CMROUser getUserByMail(String mail) throws IllegalArgumentException, NoSuchElementException;
 
     /**
+     * Check if there is a current valid validation process for the user
+     *
+     * @param user
+     * @return
+     * @throws IllegalArgumentException
+     */
+    boolean hasCurrentValidationProcess(CMROUser user) throws IllegalArgumentException;
+
+    /**
      * Send a validation mail
      *
      * @param user
@@ -71,6 +80,15 @@ public interface CMROUserService {
      * does not match or was emitted too long ago
      */
     void validate(CMROUser user, String token) throws IllegalArgumentException;
+
+    /**
+     * Check if there is a current valid renewal password process for the user
+     *
+     * @param user
+     * @return
+     * @throws IllegalArgumentException
+     */
+    boolean hasCurrentRenewalPasswordProcess(CMROUser user) throws IllegalArgumentException;
 
     /**
      * Send a change password email
