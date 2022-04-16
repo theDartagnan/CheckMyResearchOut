@@ -16,28 +16,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package checkMyResearchOut;
+package checkMyResearchOut.mongoModel;
 
 import checkMyResearchOut.configuration.MongoConfiguration;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import static org.assertj.core.api.Assertions.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
  *
  * @author Rémi Venant
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DataMongoTest
 @Import(MongoConfiguration.class)
 @ActiveProfiles("mongo-test")
-public class CheckMyResearchOutApplicationTest {
+public class QuizRepositoryTest {
 
-    public CheckMyResearchOutApplicationTest() {
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private QuizRepository testedRepo;
+
+    public QuizRepositoryTest() {
     }
 
     @BeforeAll
@@ -54,13 +65,29 @@ public class CheckMyResearchOutApplicationTest {
 
     @AfterEach
     public void tearDown() {
+        this.mongoTemplate.remove(new BasicQuery("{}"), Quiz.class);
+    }
+
+    private Quiz generateQuiz(int idx) {
+        return new Quiz("quiz_" + idx, "Quiz " + idx, "A quiz " + idx);
     }
 
     /**
-     * Test of context loading
+     * Test of findByName method, of class QuizRepository.
      */
     @Test
-    public void contextLoads() {
+    public void testFindByName() {
+        System.out.println("findByName");
+
+        String[] quizIds = new String[4];
+        for (int i = 0; i < 4; i++) {
+            Quiz qi = this.mongoTemplate.save(this.generateQuiz(i));
+            quizIds[i] = qi.getId();
+        }
+
+        Optional<Quiz> optQuiz = this.testedRepo.findByName("quiz_2");
+        assertThat(optQuiz).isNotEmpty();
+        assertThat(optQuiz.get().getId()).isEqualTo(quizIds[2]);
     }
 
 }

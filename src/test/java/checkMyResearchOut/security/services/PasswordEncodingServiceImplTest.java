@@ -16,28 +16,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package checkMyResearchOut;
+package checkMyResearchOut.security.services;
 
-import checkMyResearchOut.configuration.MongoConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ActiveProfiles;
+import static org.assertj.core.api.Assertions.*;
 
 /**
  *
  * @author Rémi Venant
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(MongoConfiguration.class)
-@ActiveProfiles("mongo-test")
-public class CheckMyResearchOutApplicationTest {
+public class PasswordEncodingServiceImplTest {
 
-    public CheckMyResearchOutApplicationTest() {
+    public PasswordEncodingServiceImplTest() {
     }
 
     @BeforeAll
@@ -57,10 +51,28 @@ public class CheckMyResearchOutApplicationTest {
     }
 
     /**
-     * Test of context loading
+     * Test of encodePassword method, of class PasswordEncodingServiceImpl.
      */
     @Test
-    public void contextLoads() {
+    public void testEncodePassword() {
+        String clearPassword = "to$to ha3éhj  ";
+        PasswordEncodingServiceImpl instance = new PasswordEncodingServiceImpl();
+        String result = instance.encodePassword(clearPassword);
+        System.out.println("Encoded password: ->" + result + "<-");
+        assertThat(result).isNotBlank().as("Encoded password is not blank");
+    }
+
+    /**
+     * Test of verifyPassword method, of class PasswordEncodingServiceImpl.
+     */
+    @Test
+    public void testVerifyPassword() {
+        String encodedPassword = "$2b$12$JxMaDq9RUV.s.p0DeRsb/OEgZHNjBlcD5Vb80QbrZTkh0x3H36xZu";
+        PasswordEncodingServiceImpl instance = new PasswordEncodingServiceImpl();
+        boolean result = instance.verifyPassword("to$to ha3éhj  ", encodedPassword);
+        assertThat(result).isTrue().as("Good password match");
+        result = instance.verifyPassword("autre pass", encodedPassword);
+        assertThat(result).isFalse().as("Good password match");
     }
 
 }
