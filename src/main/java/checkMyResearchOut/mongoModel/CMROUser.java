@@ -18,6 +18,8 @@
  */
 package checkMyResearchOut.mongoModel;
 
+import checkMyResearchOut.mongoModel.views.CMROUserViews;
+import com.fasterxml.jackson.annotation.JsonView;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import javax.validation.constraints.NotBlank;
@@ -35,13 +37,16 @@ public class CMROUser implements Serializable {
     @Id
     private String id;
 
+    @JsonView(CMROUserViews.Normal.class)
     @NotBlank
     @Indexed(unique = true)
     private String mail;
 
+    @JsonView(CMROUserViews.Normal.class)
     @NotBlank
     private String lastname;
 
+    @JsonView(CMROUserViews.Normal.class)
     @NotBlank
     private String firstname;
 

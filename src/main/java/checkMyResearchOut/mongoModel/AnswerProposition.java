@@ -18,6 +18,8 @@
  */
 package checkMyResearchOut.mongoModel;
 
+import checkMyResearchOut.mongoModel.views.QuestionViews;
+import com.fasterxml.jackson.annotation.JsonView;
 import java.io.Serializable;
 
 /**
@@ -26,7 +28,10 @@ import java.io.Serializable;
  */
 public class AnswerProposition implements Serializable {
 
+    @JsonView(QuestionViews.Normal.class)
     private String title;
+
+    @JsonView(QuestionViews.WithAnswers.class)
     private boolean correct;
 
     public AnswerProposition() {

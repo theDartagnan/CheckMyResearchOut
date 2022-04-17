@@ -18,6 +18,8 @@
  */
 package checkMyResearchOut.mongoModel;
 
+import checkMyResearchOut.mongoModel.views.QuizViews;
+import com.fasterxml.jackson.annotation.JsonView;
 import java.io.Serializable;
 import javax.validation.constraints.NotBlank;
 import org.springframework.data.annotation.Id;
@@ -31,16 +33,20 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "quizzes")
 public class Quiz implements Serializable {
 
+    @JsonView(QuizViews.Normal.class)
     @Id
     private String id;
 
+    @JsonView(QuizViews.Normal.class)
     @NotBlank
     @Indexed(unique = true)
     private String name;
 
+    @JsonView(QuizViews.Normal.class)
     @NotBlank
     private String fullName;
 
+    @JsonView(QuizViews.Normal.class)
     private String description;
 
     protected Quiz() {

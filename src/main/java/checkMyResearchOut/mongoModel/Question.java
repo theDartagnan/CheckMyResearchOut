@@ -18,6 +18,8 @@
  */
 package checkMyResearchOut.mongoModel;
 
+import checkMyResearchOut.mongoModel.views.QuestionViews;
+import com.fasterxml.jackson.annotation.JsonView;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,22 +39,28 @@ import org.springframework.data.mongodb.core.mapping.DocumentReference;
 @Document(collection = "questions")
 public class Question implements Serializable {
 
+    @JsonView(QuestionViews.Normal.class)
     @Id
     private String id;
 
+    @JsonView(QuestionViews.Normal.class)
     @NotNull
     @Indexed(unique = false)
     private String quizName;
 
+    @JsonView(QuestionViews.Normal.class)
     @NotBlank
     private String title;
 
+    @JsonView(QuestionViews.Normal.class)
     @NotEmpty
     private List<AnswerProposition> answerPropositions = new ArrayList<>();
 
+    @JsonView(QuestionViews.Normal.class)
     @NotBlank
     private String author;
 
+    @JsonView(QuestionViews.Normal.class)
     @NotBlank
     private String publication;
 
