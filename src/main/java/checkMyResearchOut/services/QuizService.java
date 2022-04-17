@@ -74,6 +74,7 @@ public interface QuizService {
      * Create a question
      *
      * @param quiz
+     * @param title
      * @param answerPropositions
      * @param author
      * @param publication
@@ -83,16 +84,26 @@ public interface QuizService {
     Question createQuestion(Quiz quiz, String title, List<AnswerProposition> answerPropositions, String author, String publication) throws IllegalArgumentException;
 
     /**
+     * Get questions of a quiz
      *
+     * @param quiz
+     * @return
+     */
+    List<Question> getQuizQuestions(Quiz quiz);
+
+    /**
+     *
+     * @param quizName
      * @param questionId
      * @return
      */
-    Question getQuestionById(String questionId) throws IllegalArgumentException, NoSuchElementException;
+    Question getQuestionById(String quizName, String questionId) throws IllegalArgumentException, NoSuchElementException;
 
     /**
      * Update a question
      *
      * @param question
+     * @param title
      * @param answerPropositions
      * @param author
      * @param publication

@@ -78,6 +78,14 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
+    public List<Question> getQuizQuestions(Quiz quiz) {
+        if (quiz == null) {
+            throw new IllegalArgumentException("Quiz cannot be null.");
+        }
+        return this.questionRepo.findByQuizName(quiz.getName()).collect(Collectors.toList());
+    }
+
+    @Override
     public Quiz getQuizByName(String name) throws IllegalArgumentException, NoSuchElementException {
         if (!StringUtils.hasText(name)) {
             throw new IllegalArgumentException("Quiz name cannot be blank.");
@@ -127,11 +135,16 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    public Question getQuestionById(String questionId) throws IllegalArgumentException, NoSuchElementException {
-        if (!StringUtils.hasText(questionId)) {
-            throw new IllegalArgumentException("Question id cannot be blank.");
+    public Question getQuestionById(String quizName, String questionId) throws IllegalArgumentException, NoSuchElementException {
+        if (!StringUtils.hasText(quizName) || !StringUtils.hasText(questionId)) {
+            throw new IllegalArgumentException("QuizName nor question id cannot be blank.");
         }
-        return this.questionRepo.findById(questionId).orElseThrow(() -> new NoSuchElementException("Unknown question id"));
+        Question question = this.questionRepo.findById(questionId)
+                .orElseThrow(() -> new NoSuchElementException("Unknown question id."));
+        if (question.getQuizName().equals(quizName)) {
+            throw new NoSuchElementException("Unknown question id for the given quiz.");
+        }
+        return question;
     }
 
     @Override
