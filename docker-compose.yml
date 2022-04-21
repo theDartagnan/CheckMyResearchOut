@@ -2,21 +2,21 @@ version: '3'
 
 #Déclaration des services créés
 services:
-    mmi-library:
-        image: "maven:3.8.4-openjdk-17"
+    cmro-server:
+        image: "maven:3.8.5-openjdk-18"
         #redefinition de la config d'accès à mongo
         environment:
             spring.data.mongodb.host: mongo
             spring.data.mongodb.authentication-database: admin
             spring.data.mongodb.username: admin
-            spring.data.mongodb.password: ADJ3553qhl23ahA
-            spring.data.mongodb.database: mmilibsrv
+            spring.data.mongodb.password: DHsha43shkesKShjELMbS
+            spring.data.mongodb.database: checkmro
         #utilisation d'un volume pour le cache maven et d'un binding pour le dossier projet
         volumes:
             - cachemaven:/root/.m2
-            - ./:/usr/src/mmiLibraryServer
+            - ./:/usr/src/cmro
         #définition du working dir
-        working_dir: /usr/src/mmiLibraryServer
+        working_dir: /usr/src/cmro
         #exposition et mapping au port de la machine hote : ACCES PUBLIQUE
         ports:
             - 8080:8080
@@ -27,22 +27,22 @@ services:
             - mongo
         #Accès sur réseau privé virtuel pour la connexion avec les autres conteneur
         networks:
-            mmilibnet:
+            cmronet:
                 
     mongo:
-        image: mongo:4.2
+        image: mongo:4.4.13
         restart: always
         #variables d'environnement
         environment:
             MONGO_INITDB_ROOT_USERNAME: admin
-            MONGO_INITDB_ROOT_PASSWORD: ADJ3553qhl23ahA
-            MONGO_INITDB_DATABASE: mmilibsrv
+            MONGO_INITDB_ROOT_PASSWORD: DHsha43shkesKShjELMbS
+            MONGO_INITDB_DATABASE: checkmro
         #vutilisation d'un volume pour les données de la bd
         volumes:
             - mongostorage:/data/db
         #Accès sur réseau privé virtuel pour la connexion avec les autres conteneur
         networks:
-            mmilibnet:
+            cmronet:
 
 #Déclaration des volumes pour permettre un réutilisation dans d'autres services
 volumes:
@@ -50,4 +50,4 @@ volumes:
     mongostorage:
         
 networks:
-   mmilibnet:
+   cmronet:

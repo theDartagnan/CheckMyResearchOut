@@ -18,6 +18,8 @@
  */
 package checkMyResearchOut.controllers;
 
+import checkMyResearchOut.services.exceptions.OtherAnswerGivenEarlierException;
+import checkMyResearchOut.services.exceptions.SuccessfulAnswerException;
 import java.time.ZonedDateTime;
 import java.util.NoSuchElementException;
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +27,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -72,7 +75,7 @@ public class ExceptionsHandler {
 
     @ExceptionHandler(DuplicateKeyException.class)
     public @ResponseBody
-    ResponseEntity<ErrorMessage> handleMemberWithUnreturnedLoan(HttpServletRequest request, DuplicateKeyException ex) {
+    ResponseEntity<ErrorMessage> handleDuplicateKeyException(HttpServletRequest request, DuplicateKeyException ex) {
         final HttpStatus status = HttpStatus.CONFLICT;
         final String error = "An unique value is already present.";
         return new ResponseEntity<>(createErrorMessage(status, error, ex.getMessage(), request), status);
@@ -83,6 +86,30 @@ public class ExceptionsHandler {
     ResponseEntity<ErrorMessage> handleMethodUnsupported(HttpServletRequest request, HttpRequestMethodNotSupportedException ex) {
         final HttpStatus status = HttpStatus.METHOD_NOT_ALLOWED;
         final String error = "Method unsupported.";
+        return new ResponseEntity<>(createErrorMessage(status, error, ex.getMessage(), request), status);
+    }
+
+    @ExceptionHandler(SuccessfulAnswerException.class)
+    public @ResponseBody
+    ResponseEntity<ErrorMessage> handleSuccessfulAnswer(HttpServletRequest request, Throwable ex) {
+        final HttpStatus status = HttpStatus.BAD_REQUEST;
+        final String error = "Invalid answer.";
+        return new ResponseEntity<>(createErrorMessage(status, error, ex.getMessage(), request), status);
+    }
+
+    @ExceptionHandler(OtherAnswerGivenEarlierException.class)
+    public @ResponseBody
+    ResponseEntity<ErrorMessage> handleOtherAnswerGivenEarlierException(HttpServletRequest request, Throwable ex) {
+        final HttpStatus status = HttpStatus.BAD_REQUEST;
+        final String error = "Invalid answer.";
+        return new ResponseEntity<>(createErrorMessage(status, error, ex.getMessage(), request), status);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public @ResponseBody
+    ResponseEntity<ErrorMessage> handleAccessDeniedException(HttpServletRequest request, Throwable ex) {
+        final HttpStatus status = HttpStatus.FORBIDDEN;
+        final String error = "Access denied.";
         return new ResponseEntity<>(createErrorMessage(status, error, ex.getMessage(), request), status);
     }
 

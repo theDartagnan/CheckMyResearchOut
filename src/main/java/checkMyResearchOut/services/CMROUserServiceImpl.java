@@ -21,6 +21,8 @@ package checkMyResearchOut.services;
 import checkMyResearchOut.mongoModel.CMROUser;
 import checkMyResearchOut.mongoModel.CMROUserAnswerRepository;
 import checkMyResearchOut.mongoModel.CMROUserRepository;
+import checkMyResearchOut.security.model.CMROSecurityUser;
+import checkMyResearchOut.security.services.CurrentUserInformationService;
 import checkMyResearchOut.security.services.PasswordEncodingService;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
@@ -31,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.mail.MailException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -49,6 +52,8 @@ public class CMROUserServiceImpl implements CMROUserService {
 
     private final MailSendingService mailSendSvc;
 
+    private final CurrentUserInformationService currentUserInformationSvc;
+
     private final int tokenDurationMinutes;
 
     private final int minTimeBeforeNewMail;
@@ -56,12 +61,14 @@ public class CMROUserServiceImpl implements CMROUserService {
     @Autowired
     public CMROUserServiceImpl(CMROUserRepository userRepo, CMROUserAnswerRepository answerRepo,
             PasswordEncodingService passwordSvc, MailSendingService mailSendSvc,
+            CurrentUserInformationService currentUserInformationSvc,
             @Value("${checkMyResearchOut.server.token-duration:30}") int tokenDurationMinutes,
             @Value("${checkMyResearchOut.mail.mail-timeout:5}") int minTimeBeforeNewMail) {
         this.userRepo = userRepo;
         this.answerRepo = answerRepo;
         this.passwordSvc = passwordSvc;
         this.mailSendSvc = mailSendSvc;
+        this.currentUserInformationSvc = currentUserInformationSvc;
         this.tokenDurationMinutes = tokenDurationMinutes;
         this.minTimeBeforeNewMail = minTimeBeforeNewMail;
     }
@@ -81,6 +88,15 @@ public class CMROUserServiceImpl implements CMROUserService {
         } catch (ConstraintViolationException ex) {
             throw new IllegalArgumentException(ex);
         }
+    }
+
+    @Override
+    public CMROUser getCurrentUser() throws IllegalArgumentException, NoSuchElementException {
+        CMROSecurityUser secUser = this.currentUserInformationSvc.getUser();
+        if (secUser == null) {
+            throw new IllegalArgumentException("Current user absent");
+        }
+        return this.userRepo.findById(secUser.getUserId()).orElseThrow(() -> new NoSuchElementException("Unknown user id."));
     }
 
     @Override
@@ -104,7 +120,7 @@ public class CMROUserServiceImpl implements CMROUserService {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null.");
         }
-        return user.getValidated()
+        return !user.getValidated()
                 && user.getValidationToken() != null && user.getTokenEmissionDateTime() != null
                 && user.getTokenEmissionDateTime().plusMinutes(this.tokenDurationMinutes).isAfter(LocalDateTime.now());
     }
@@ -126,7 +142,7 @@ public class CMROUserServiceImpl implements CMROUserService {
     }
 
     @Override
-    public void validate(CMROUser user, String token) throws IllegalArgumentException {
+    public void validate(CMROUser user, String token) throws IllegalArgumentException, AccessDeniedException {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null.");
         }
@@ -134,11 +150,11 @@ public class CMROUserServiceImpl implements CMROUserService {
             throw new IllegalArgumentException("User account already validated.");
         }
         if (user.getValidationToken() == null || !user.getValidationToken().equals(token)) {
-            throw new IllegalArgumentException("Invalid token");
+            throw new AccessDeniedException("Invalid token.");
         }
         if (user.getTokenEmissionDateTime().plusMinutes(this.tokenDurationMinutes)
                 .isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Outdated token");
+            throw new AccessDeniedException("Outdated token.");
         }
         user.setValidated(true);
         user.setValidationToken(null);
@@ -151,7 +167,7 @@ public class CMROUserServiceImpl implements CMROUserService {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null.");
         }
-        return !user.getValidated()
+        return user.getValidated()
                 && user.getValidationToken() != null && user.getTokenEmissionDateTime() != null
                 && user.getTokenEmissionDateTime().plusMinutes(this.tokenDurationMinutes).isAfter(LocalDateTime.now());
     }
@@ -173,7 +189,7 @@ public class CMROUserServiceImpl implements CMROUserService {
     }
 
     @Override
-    public void changePassword(CMROUser user, String token, String clearPassword) throws IllegalArgumentException {
+    public void changePassword(CMROUser user, String token, String clearPassword) throws IllegalArgumentException, AccessDeniedException {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null.");
         }
@@ -181,11 +197,11 @@ public class CMROUserServiceImpl implements CMROUserService {
             throw new IllegalArgumentException("User account not validated.");
         }
         if (user.getValidationToken() == null || !user.getValidationToken().equals(token)) {
-            throw new IllegalArgumentException("Invalid token");
+            throw new AccessDeniedException("Invalid token.");
         }
         if (user.getTokenEmissionDateTime().plusMinutes(this.tokenDurationMinutes)
                 .isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Outdated token");
+            throw new AccessDeniedException("Outdated token.");
         }
         user.setPassword(this.passwordSvc.encodePassword(clearPassword));
         user.setValidationToken(null);

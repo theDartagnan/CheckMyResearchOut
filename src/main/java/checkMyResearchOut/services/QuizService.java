@@ -25,6 +25,7 @@ import checkMyResearchOut.mongoModel.Quiz;
 import java.util.List;
 import java.util.NoSuchElementException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  *
@@ -42,6 +43,7 @@ public interface QuizService {
      * @throws IllegalArgumentException
      * @throws DuplicateKeyException
      */
+    @PreAuthorize("hasRole('ADMIN')")
     Quiz createQuiz(String name, String fullName, String description) throws IllegalArgumentException, DuplicateKeyException;
 
     /**
@@ -49,6 +51,7 @@ public interface QuizService {
      * @param name
      * @return
      */
+    @PreAuthorize("hasRole('USER')")
     Quiz getQuizByName(String name) throws IllegalArgumentException, NoSuchElementException;
 
     /**
@@ -60,6 +63,7 @@ public interface QuizService {
      * @return
      * @throws IllegalArgumentException
      */
+    @PreAuthorize("hasRole('ADMIN')")
     Quiz updateQuiz(Quiz quiz, String fullName, String description) throws IllegalArgumentException;
 
     /**
@@ -68,6 +72,7 @@ public interface QuizService {
      * @param quiz
      * @throws IllegalArgumentException
      */
+    @PreAuthorize("hasRole('ADMIN')")
     void deleteQuiz(Quiz quiz) throws IllegalArgumentException;
 
     /**
@@ -81,6 +86,7 @@ public interface QuizService {
      * @return
      * @throws IllegalArgumentException
      */
+    @PreAuthorize("hasRole('ADMIN')")
     Question createQuestion(Quiz quiz, String title, List<AnswerProposition> answerPropositions, String author, String publication) throws IllegalArgumentException;
 
     /**
@@ -89,6 +95,7 @@ public interface QuizService {
      * @param quiz
      * @return
      */
+    @PreAuthorize("hasRole('ADMIN')")
     List<Question> getQuizQuestions(Quiz quiz);
 
     /**
@@ -97,6 +104,7 @@ public interface QuizService {
      * @param questionId
      * @return
      */
+    @PreAuthorize("hasRole('ADMIN')")
     Question getQuestionById(String quizName, String questionId) throws IllegalArgumentException, NoSuchElementException;
 
     /**
@@ -110,6 +118,7 @@ public interface QuizService {
      * @return
      * @throws IllegalArgumentException
      */
+    @PreAuthorize("hasRole('ADMIN')")
     Question updateQuestion(Question question, String title, List<AnswerProposition> answerPropositions, String author, String publication) throws IllegalArgumentException;
 
     /**
@@ -117,6 +126,7 @@ public interface QuizService {
      *
      * @param question
      */
+    @PreAuthorize("hasRole('ADMIN')")
     void deleteQuestion(Question question);
 
     /**
@@ -125,6 +135,7 @@ public interface QuizService {
      * @return
      * @throws IllegalArgumentException
      */
+    @PreAuthorize("hasRole('USER')")
     Long getQuizQuestionsNumber(Quiz quiz) throws IllegalArgumentException;
 
     /**
@@ -133,8 +144,9 @@ public interface QuizService {
      * @param quiz
      * @param user
      * @return
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException if quiz or user is null
      */
+    @PreAuthorize("(hasRole('USER') and #user.id == principal.userId) or hasRole('ADMIN')")
     Long getUnansweredOrUnsuccessfulAnsweredQuestionsNumber(Quiz quiz, CMROUser user) throws IllegalArgumentException;
 
     /**
@@ -152,7 +164,8 @@ public interface QuizService {
      * @param quiz
      * @param user
      * @return
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException if quiz or user is null
      */
+    @PreAuthorize("(hasRole('USER') and #user.id == principal.userId) or hasRole('ADMIN')")
     Question getRandomAnswerableQuestion(Quiz quiz, CMROUser user) throws IllegalArgumentException;
 }

@@ -1,10 +1,10 @@
 #!/bin/bash
-echo "Attempt to connect to MMI Library Server Mongo server..."
-docker run -ti --rm --name test-mmilibsrv-mongo-cli \
-    --network mmilibtestnet \
-    mongo:4.2 mongo \
-        --host test-mmilibsrv-mongo-src \
+echo "Attempt to connect to Check My Research Out Mongo server..."
+docker run -ti --rm --name test-cmro-mongo-cli \
+    --network cmrotestnet \
+    mongo:4.4.13 mongo \
+        --host test-cmro-mongo-srv \
         -u admin -p testpwd --authenticationDatabase admin \
-        mmilibsrv
+        checkmro
 
 echo "Bye."

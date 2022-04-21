@@ -22,7 +22,10 @@ import checkMyResearchOut.mongoModel.CMROUser;
 import checkMyResearchOut.mongoModel.CMROUserAnswer;
 import checkMyResearchOut.mongoModel.Question;
 import checkMyResearchOut.mongoModel.Quiz;
+import checkMyResearchOut.services.exceptions.OtherAnswerGivenEarlierException;
+import checkMyResearchOut.services.exceptions.SuccessfulAnswerException;
 import java.util.Set;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  *
@@ -37,11 +40,24 @@ public interface AnswerService {
      * @param question
      * @param propositionIndices
      * @return
-     * @throws IllegalArgumentException if user or question is null, or if question was already
-     * successfully answere, or if question cannot be answered or
+     * @throws IllegalArgumentException if user or question is null
+     * @throws checkMyResearchOut.services.exceptions.OtherAnswerGivenEarlierException if question
+     * was answered eralier before the timeout
+     * @throws checkMyResearchOut.services.exceptions.SuccessfulAnswerException if question was
+     * already successfully answere
      */
-    CMROUserAnswer answerAQuestion(CMROUser user, Question question, Set<Integer> propositionIndices) throws IllegalArgumentException;
+    @PreAuthorize("(hasRole('USER') and #user.id == principal.userId) or hasRole('ADMIN')")
+    CMROUserAnswer answerAQuestion(CMROUser user, Question question, Set<Integer> propositionIndices)
+            throws IllegalArgumentException, OtherAnswerGivenEarlierException, SuccessfulAnswerException;
 
     //List<CMROUserAnswer> getUsersAnswers(Quiz quiz, CMROUser user) throws IllegalArgumentException;
+    /**
+     *
+     * @param quiz
+     * @param user
+     * @return
+     * @throws IllegalArgumentException
+     */
+    @PreAuthorize("(hasRole('USER') and #user.id == principal.userId) or hasRole('ADMIN')")
     CMROUserRanking getQuizRanking(Quiz quiz, CMROUser user) throws IllegalArgumentException;
 }

@@ -16,19 +16,45 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package checkMyResearchOut.mongoModel.views;
+package checkMyResearchOut.security.model;
+
+import java.io.Serializable;
 
 /**
  *
  * @author Rémi Venant
  */
-public interface CMROUserViews {
+public class CredentialInput implements Serializable {
 
-    public static interface Normal extends DefaultView.Default {
+    private String mail;
+    private String password;
+    private boolean rememberMe = false;
 
+    public CredentialInput() {
     }
 
-    public static interface WithInfo extends Normal {
-
+    public String getMail() {
+        return mail;
     }
+
+    public void setMail(String mail) {
+        this.mail = mail;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isRememberMe() {
+        return rememberMe;
+    }
+
+    public void setRememberMe(boolean rememberMe) {
+        this.rememberMe = rememberMe;
+    }
+
 }

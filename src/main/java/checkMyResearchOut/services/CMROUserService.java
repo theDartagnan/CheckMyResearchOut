@@ -23,6 +23,8 @@ import java.util.NoSuchElementException;
 import javax.mail.MessagingException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.mail.MailException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  *
@@ -42,7 +44,18 @@ public interface CMROUserService {
      * (ConstraintViolationException)
      * @throws DuplicateKeyException if bookCopy if unknown or book copy does not belong to book
      */
+    @PreAuthorize("isAnonymous() or hasRole('ADMIN')")
     CMROUser createUser(String mail, String lastname, String firstname, String clearPassword) throws IllegalArgumentException, DuplicateKeyException;
+
+    /**
+     * Retrieve currently connected user
+     *
+     * @return
+     * @throws IllegalArgumentException if no connected user
+     * @throws NoSuchElementException if user is not found
+     */
+    @PreAuthorize("isAuthenticated()")
+    CMROUser getCurrentUser() throws IllegalArgumentException, NoSuchElementException;
 
     /**
      * Get a user by its id
@@ -51,8 +64,10 @@ public interface CMROUserService {
      * @return
      * @throws NoSuchElementException
      */
+    //We use postauthorized since we do not know user mail before retrieving it
+    @PreAuthorize("(hasRole('USER') and #userId == principal.userId) or hasRole('ADMIN')")
     CMROUser getUserById(String userId) throws IllegalArgumentException, NoSuchElementException;
-    
+
     /**
      * Get a user by mail
      *
@@ -60,6 +75,7 @@ public interface CMROUserService {
      * @return
      * @throws NoSuchElementException
      */
+    @PreAuthorize("permitAll") // since we use this service for account validation and password-renewal
     CMROUser getUserByMail(String mail) throws IllegalArgumentException, NoSuchElementException;
 
     /**
@@ -69,6 +85,7 @@ public interface CMROUserService {
      * @return
      * @throws IllegalArgumentException
      */
+    @PreAuthorize("isAnonymous() or hasRole('ADMIN')")
     boolean hasCurrentValidationProcess(CMROUser user) throws IllegalArgumentException;
 
     /**
@@ -78,6 +95,7 @@ public interface CMROUserService {
      * @throws IllegalArgumentException if user is null or user is already validated
      * @throws javax.mail.MessagingException
      */
+    @PreAuthorize("isAnonymous() or hasRole('ADMIN')")
     void sendValidationEmail(CMROUser user) throws IllegalArgumentException, MailException, MessagingException;
 
     /**
@@ -85,10 +103,11 @@ public interface CMROUserService {
      *
      * @param user
      * @param token
-     * @throws IllegalArgumentException if user if null or already validate or if token is null or
-     * does not match or was emitted too long ago
+     * @throws IllegalArgumentException if user if null or already validate
+     * @throws AccessDeniedException if token is null or does not match or was emitted too long ago
      */
-    void validate(CMROUser user, String token) throws IllegalArgumentException;
+    @PreAuthorize("isAnonymous() or hasRole('ADMIN')")
+    void validate(CMROUser user, String token) throws IllegalArgumentException, AccessDeniedException;
 
     /**
      * Check if there is a current valid renewal password process for the user
@@ -97,6 +116,7 @@ public interface CMROUserService {
      * @return
      * @throws IllegalArgumentException
      */
+    @PreAuthorize("isAnonymous() or hasRole('ADMIN')")
     boolean hasCurrentRenewalPasswordProcess(CMROUser user) throws IllegalArgumentException;
 
     /**
@@ -106,6 +126,7 @@ public interface CMROUserService {
      * @throws IllegalArgumentException if user is null or if account is not validate
      * @throws javax.mail.MessagingException
      */
+    @PreAuthorize("isAnonymous() or hasRole('ADMIN')")
     void sendChangePasswordEmail(CMROUser user) throws IllegalArgumentException, MailException, MessagingException;
 
     /**
@@ -114,10 +135,11 @@ public interface CMROUserService {
      * @param user
      * @param token
      * @param clearPassword
-     * @throws IllegalArgumentException if user or token or clearPassword is null or if token does
-     * not match or was emitted too long ago
+     * @throws IllegalArgumentException if user or token or clearPassword is null
+     * @throws AccessDeniedException if token does not match or was emitted too long ago
      */
-    void changePassword(CMROUser user, String token, String clearPassword) throws IllegalArgumentException;
+    @PreAuthorize("isAnonymous() or hasRole('ADMIN')")
+    void changePassword(CMROUser user, String token, String clearPassword) throws IllegalArgumentException, AccessDeniedException;
 
     /**
      * Patch a user. Change lastname, firstname or clearPassword if they are not blank
@@ -129,6 +151,7 @@ public interface CMROUserService {
      * @return the updated user
      * @throws IllegalArgumentException if user is null or if account is not validated
      */
+    @PreAuthorize("(hasRole('USER') and #user.id == principal.userId) or hasRole('ADMIN')")
     CMROUser patchUser(CMROUser user, String lastname, String firstname, String clearPassword) throws IllegalArgumentException;
 
     /**
@@ -137,5 +160,6 @@ public interface CMROUserService {
      * @param user
      * @throws IllegalArgumentException
      */
+    @PreAuthorize("(hasRole('USER') and #user.id == principal.userId) or hasRole('ADMIN')")
     void deleteUser(CMROUser user) throws IllegalArgumentException;
 }

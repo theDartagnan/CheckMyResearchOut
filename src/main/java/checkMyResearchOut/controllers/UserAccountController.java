@@ -26,6 +26,8 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.NoSuchElementException;
 import javax.mail.MessagingException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -44,6 +46,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/rest/users-accounts")
 public class UserAccountController {
 
+    private static final Log LOG = LogFactory.getLog(UserAccountController.class);
+
     private final CMROUserService userSvc;
 
     @Autowired
@@ -55,7 +59,9 @@ public class UserAccountController {
     public ResponseEntity<?> checkAccountValidationProcess(@RequestParam(name = "m") String encodeUserMail)
             throws UnsupportedEncodingException {
         final String mail = URLDecoder.decode(encodeUserMail, StandardCharsets.UTF_8.toString());
+        LOG.info("Mail is: " + mail);
         final CMROUser user = this.userSvc.getUserByMail(mail);
+        LOG.info("User is: " + user.toString());
         if (!this.userSvc.hasCurrentValidationProcess(user)) {
             throw new NoSuchElementException("No current validation process");
         }
@@ -92,7 +98,7 @@ public class UserAccountController {
             throws UnsupportedEncodingException {
         final String mail = URLDecoder.decode(encodeUserMail, StandardCharsets.UTF_8.toString());
         final CMROUser user = this.userSvc.getUserByMail(mail);
-        if (!this.userSvc.hasCurrentValidationProcess(user)) {
+        if (!this.userSvc.hasCurrentRenewalPasswordProcess(user)) {
             throw new NoSuchElementException("No current validation process");
         }
         return ResponseEntity.noContent().build();

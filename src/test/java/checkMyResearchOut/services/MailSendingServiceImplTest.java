@@ -33,13 +33,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
  *
  * @author Rémi Venant
  */
-@ActiveProfiles({"mail"})
+@ActiveProfiles({"mail-test", "disable-security"})
 @SpringBootTest(classes = {MailSendingServiceImpl.class, MailSenderAutoConfiguration.class},
         webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class MailSendingServiceImplTest {
@@ -47,10 +48,21 @@ public class MailSendingServiceImplTest {
     private static SimpleSmtpServer server;
 
     @Autowired
+    private JavaMailSender mailSender;
+
     private MailSendingServiceImpl mailSendingSvc;
-    
+
+    @Value("${checkMyResearchOut.mail.account-validation-url}")
+    private String accountValidationUrl;
+
+    @Value("${checkMyResearchOut.mail.password-renewal-url}")
+    private String passwordRenewalUrl;
+
     @Value("${checkMyResearchOut.mail.reply-to}")
     private String replyTo;
+
+    @Value("${spring.application.name}")
+    private String applicationName;
 
     public MailSendingServiceImplTest() {
     }
@@ -67,6 +79,7 @@ public class MailSendingServiceImplTest {
 
     @BeforeEach
     public void setUp() {
+        this.mailSendingSvc = new MailSendingServiceImpl(mailSender, accountValidationUrl, passwordRenewalUrl, replyTo, applicationName);
     }
 
     @AfterEach
@@ -99,7 +112,7 @@ public class MailSendingServiceImplTest {
         assertThat(messageRecevied.getHeaderValue("From")).isEqualTo(this.replyTo);
         assertThat(messageRecevied.getHeaderValue("To")).isEqualTo(mail);
         assertThat(messageRecevied.getHeaderValue("Cc")).isNull();
-        assertThat(messageRecevied.getHeaderValue("Subject")).isEqualTo("Validation de compte - Viens voir mes recherches");
+        assertThat(messageRecevied.getHeaderValue("Subject")).isEqualTo("Validation de compte - " + this.applicationName);
         System.out.println("Account validation Mail body:");
         System.out.println(messageRecevied.getBody());
     }
@@ -129,7 +142,7 @@ public class MailSendingServiceImplTest {
         assertThat(messageRecevied.getHeaderValue("From")).isEqualTo(this.replyTo);
         assertThat(messageRecevied.getHeaderValue("To")).isEqualTo(mail);
         assertThat(messageRecevied.getHeaderValue("Cc")).isNull();
-        assertThat(messageRecevied.getHeaderValue("Subject")).isEqualTo("Renouvellement de mot de passe - Viens voir mes recherches");
+        assertThat(messageRecevied.getHeaderValue("Subject")).isEqualTo("Renouvellement de mot de passe - " + this.applicationName);
         System.out.println("Password renewl mail body:");
         System.out.println(messageRecevied.getBody());
     }

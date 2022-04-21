@@ -34,7 +34,7 @@ import org.springframework.test.context.ActiveProfiles;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(MongoConfiguration.class)
-@ActiveProfiles("mongo-test")
+@ActiveProfiles({"mongo-test", "disable-security"})
 public class CheckMyResearchOutApplicationTest {
 
     public CheckMyResearchOutApplicationTest() {

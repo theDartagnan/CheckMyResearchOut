@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,13 +56,17 @@ public class UserController {
         return createdUser;
     }
 
+    @GetMapping("{userId}")
+    @JsonView(CMROUserViews.WithInfo.class)
+    public CMROUser getUser(@PathVariable String userId) {
+        final CMROUser user = "myself".equals(userId) ? this.userSvc.getCurrentUser() : this.userSvc.getUserById(userId);
+        return user;
+    }
+
     @PatchMapping("{userId}")
-    @JsonView(CMROUserViews.Normal.class)
+    @JsonView(CMROUserViews.WithInfo.class)
     public CMROUser patchUser(@PathVariable String userId, @RequestBody CMROUser userToUpdate) {
-        final CMROUser user = "myself".equals(userId) ? null : this.userSvc.getUserById(userId);
-        if (user == null) {
-            throw new IllegalStateException("User-centrif url not implemented yet.");
-        }
+        final CMROUser user = "myself".equals(userId) ? this.userSvc.getCurrentUser() : this.userSvc.getUserById(userId);
         CMROUser updatedUser = this.userSvc.patchUser(user, userToUpdate.getLastname(),
                 userToUpdate.getFirstname(), userToUpdate.getPassword());
         return updatedUser;
@@ -69,10 +74,7 @@ public class UserController {
 
     @DeleteMapping("{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable String userId) {
-        final CMROUser user = "myself".equals(userId) ? null : this.userSvc.getUserById(userId);
-        if (user == null) {
-            throw new IllegalStateException("User-centrif url not implemented yet.");
-        }
+        final CMROUser user = "myself".equals(userId) ? this.userSvc.getCurrentUser() : this.userSvc.getUserById(userId);
         this.userSvc.deleteUser(user);
         // delete cookie
         return ResponseEntity.noContent().build();

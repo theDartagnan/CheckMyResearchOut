@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -38,6 +39,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Rémi Venant
  */
+@Profile("!fake-mail")
 @Service
 public class MailSendingServiceImpl implements MailSendingService {
 
@@ -51,15 +53,19 @@ public class MailSendingServiceImpl implements MailSendingService {
 
     private final String replyToAddress;
 
+    private final String applicationName;
+
     @Autowired
     public MailSendingServiceImpl(JavaMailSender mailSender,
             @Value("${checkMyResearchOut.mail.account-validation-url}") String accountValidationUrl,
             @Value("${checkMyResearchOut.mail.password-renewal-url}") String passwordRenewalUrl,
-            @Value("${checkMyResearchOut.mail.reply-to}") String replyToAddress) {
+            @Value("${checkMyResearchOut.mail.reply-to}") String replyToAddress,
+            @Value("${spring.application.name}") String applicationName) {
         this.mailSender = mailSender;
         this.accountValidationUrl = accountValidationUrl;
         this.passwordRenewalUrl = passwordRenewalUrl;
         this.replyToAddress = replyToAddress;
+        this.applicationName = applicationName;
     }
 
     @Override
@@ -72,14 +78,14 @@ public class MailSendingServiceImpl implements MailSendingService {
         }
         try {
             final String accessUrl = this.forgeUrl(this.accountValidationUrl, user.getMail(), user.getValidationToken());
-            final String mailSubject = String.format("Validation de compte - Viens voir mes recherches");
-            final String body = BODY_HTML_HEADER
+            final String mailSubject = "Validation de compte - " + this.applicationName;
+            final String body = this.getBodyMailHeader()
                     + String.format("<p>Bonjour %s %s,</p>", StringUtils.capitalize(user.getFirstname()), StringUtils.capitalize(user.getLastname()))
                     + "<p>Merci de rejoindre ce jeu en ligne, veuillez trouver ici le lien de validation de votre compte :<br/>"
                     + String.format("<a href=\"%s\">%s</a>.", accessUrl, accessUrl)
                     + "</p>"
                     + "<p>Ce lien est valide pendant 30 minutes. Au delai de ce délai, il faudra le renouveller.</p>"
-                    + BODY_HTML_FOOTER;
+                    + this.getBodyMailFooter();
             this.mailSender.send(this.createRawMessage(user.getMail(), this.replyToAddress, mailSubject, body));
         } catch (MessagingException ex) {
             LOG.error("Unable to create validation mail.", ex);
@@ -100,15 +106,15 @@ public class MailSendingServiceImpl implements MailSendingService {
         }
         try {
             final String accessUrl = this.forgeUrl(this.passwordRenewalUrl, user.getMail(), user.getValidationToken());
-            final String mailSubject = String.format("Renouvellement de mot de passe - Viens voir mes recherches");
-            final String body = BODY_HTML_HEADER
+            final String mailSubject = "Renouvellement de mot de passe - " + this.applicationName;
+            final String body = this.getBodyMailHeader()
                     + String.format("<p>Bonjour %s %s,</p>", StringUtils.capitalize(user.getFirstname()), StringUtils.capitalize(user.getLastname()))
                     + "<p>Vous avez demandé de renouveller votre mot de passe, veuillez trouver ici le lien d&lsquo;accès :<br/>"
                     + String.format("<a href='%s'>%s</a>.", accessUrl, accessUrl)
                     + "</p>"
                     + "<p>Si vous n&lsquo;êtes pas à l&lsquot;origine de cette demande, merci de ne pas en tenir compte.</p>"
                     + "<p>Ce lien est valide pendant 30 minutes. Au delai de ce délai, il faudra le renouveller.</p>"
-                    + BODY_HTML_FOOTER;
+                    + this.getBodyMailFooter();
             this.mailSender.send(this.createRawMessage(user.getMail(), this.replyToAddress, mailSubject, body));
         } catch (MessagingException ex) {
             LOG.error("Unable to create validation mail.", ex);
@@ -144,6 +150,14 @@ public class MailSendingServiceImpl implements MailSendingService {
         return message;
     }
 
+    private String getBodyMailHeader() {
+        return BODY_HTML_HEADER;
+    }
+
+    private String getBodyMailFooter() {
+        return String.format(BODY_HTML_FOOTER_TEMPLATE, this.applicationName);
+    }
+
     private static final String BODY_HTML_HEADER = "<!DOCTYPE html>"
             + "<html lang=\"fr\">"
             + "<head>"
@@ -151,10 +165,10 @@ public class MailSendingServiceImpl implements MailSendingService {
             + "</head>"
             + "<body>";
 
-    private static final String BODY_HTML_FOOTER = "<p>"
+    private static final String BODY_HTML_FOOTER_TEMPLATE = "<p>"
             + "Cordialement,"
             + "<br/><br/>"
-            + "L&lsquo;application Viens voir mes recherches."
+            + "L&lsquo;application %s."
             + "</p>"
             + "</body>"
             + "</html>";

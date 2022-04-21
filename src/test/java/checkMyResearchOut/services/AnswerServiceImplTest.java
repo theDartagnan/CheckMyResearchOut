@@ -28,6 +28,8 @@ import checkMyResearchOut.mongoModel.Question;
 import checkMyResearchOut.mongoModel.Quiz;
 import checkMyResearchOut.mongoModel.TestInstanceGenerationUtil;
 import checkMyResearchOut.mongoModel.UserIdQuizRank;
+import checkMyResearchOut.services.exceptions.OtherAnswerGivenEarlierException;
+import checkMyResearchOut.services.exceptions.SuccessfulAnswerException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -87,7 +89,7 @@ public class AnswerServiceImplTest {
      * Test of answerAQuestion method, of class AnswerServiceImpl.
      */
     @Test
-    public void testAnswerAQuestionFirstTime() {
+    public void testAnswerAQuestionFirstTime() throws OtherAnswerGivenEarlierException, SuccessfulAnswerException {
         System.out.println("answerAQuestion first time");
         CMROUser user = new CMROUser("user@mail", "lname", "fname", "encpwd");
         Quiz quiz = new Quiz("qi", "quiz", "quizDesc");
@@ -123,7 +125,7 @@ public class AnswerServiceImplTest {
     }
 
     @Test
-    public void testAnswerAQuestionNextTimeOk() {
+    public void testAnswerAQuestionNextTimeOk() throws OtherAnswerGivenEarlierException, SuccessfulAnswerException {
         System.out.println("answerAQuestion second time");
         CMROUser user = new CMROUser("user@mail", "lname", "fname", "encpwd");
         Quiz quiz = new Quiz("qi", "quiz", "quizDesc");
@@ -175,7 +177,7 @@ public class AnswerServiceImplTest {
         given(this.answerRepo.findByQuestionIdAndUser("qID", user)).willReturn(Optional.of(firstAnswer));
         given(this.answerRepo.save(Mockito.any(CMROUserAnswer.class))).will(AdditionalAnswers.returnsFirstArg());
 
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+        Assertions.assertThrows(OtherAnswerGivenEarlierException.class, () -> {
             this.testedSvc.answerAQuestion(user, question, Set.of(0, 2));
         });
     }

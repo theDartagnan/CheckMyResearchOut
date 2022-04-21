@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "users")
 public class CMROUser implements Serializable {
 
+    @JsonView(CMROUserViews.WithInfo.class)
     @Id
     private String id;
 
@@ -57,8 +58,10 @@ public class CMROUser implements Serializable {
 
     private LocalDateTime tokenEmissionDateTime;
 
+    @JsonView(CMROUserViews.WithInfo.class)
     private Boolean validated;
 
+    @JsonView(CMROUserViews.WithInfo.class)
     private Boolean admin;
 
     protected CMROUser() {

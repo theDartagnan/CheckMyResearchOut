@@ -16,19 +16,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package checkMyResearchOut.mongoModel.views;
+package checkMyResearchOut.security.services;
+
+import checkMyResearchOut.security.model.CMROSecurityUser;
 
 /**
  *
  * @author Rémi Venant
  */
-public interface CMROUserViews {
+public interface CurrentUserInformationService {
 
-    public static interface Normal extends DefaultView.Default {
+    CMROSecurityUser getUser();
 
-    }
+    String getUsername();
 
-    public static interface WithInfo extends Normal {
+    boolean hasOneOfRoles(String... roles);
 
-    }
+    boolean hasRole(String role);
 }

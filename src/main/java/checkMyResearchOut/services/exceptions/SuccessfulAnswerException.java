@@ -16,19 +16,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package checkMyResearchOut.mongoModel.views;
+package checkMyResearchOut.services.exceptions;
 
 /**
  *
  * @author Rémi Venant
  */
-public interface CMROUserViews {
+public class SuccessfulAnswerException extends Exception {
 
-    public static interface Normal extends DefaultView.Default {
-
+    /**
+     * Creates a new instance of <code>SuccessfulAnswerException</code> without detail message.
+     */
+    public SuccessfulAnswerException() {
     }
 
-    public static interface WithInfo extends Normal {
-
+    /**
+     * Constructs an instance of <code>SuccessfulAnswerException</code> with the specified detail
+     * message.
+     *
+     * @param msg the detail message.
+     */
+    public SuccessfulAnswerException(String msg) {
+        super(msg);
     }
 }

@@ -36,7 +36,7 @@ public class PasswordEncodingServiceImpl implements PasswordEncodingService {
     }
 
     @Override
-    public String encodePassword(String clearPassword) throws IllegalArgumentException {
+    public String encodePassword(CharSequence clearPassword) throws IllegalArgumentException {
         if (!StringUtils.hasText(clearPassword)) {
             throw new IllegalArgumentException("Password cannot be blank.");
         }
@@ -44,7 +44,7 @@ public class PasswordEncodingServiceImpl implements PasswordEncodingService {
     }
 
     @Override
-    public boolean verifyPassword(String clearPasswordToVerify, String encodedPassword) {
+    public boolean verifyPassword(CharSequence clearPasswordToVerify, String encodedPassword) {
         if (!StringUtils.hasText(clearPasswordToVerify) || !StringUtils.hasText(encodedPassword)) {
             throw new IllegalArgumentException("Password cannot be blank.");
         }

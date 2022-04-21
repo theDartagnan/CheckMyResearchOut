@@ -130,7 +130,7 @@ public class QuizServiceImpl implements QuizService {
         if (!StringUtils.hasText(title) || !StringUtils.hasText(author) || !StringUtils.hasText(publication)) {
             throw new IllegalArgumentException("Author nor publication cannot be blank.");
         }
-        Question question = new Question(publication, title, answerPropositions, author.trim(), publication.trim());
+        Question question = new Question(quiz.getName(), title, answerPropositions, author.trim(), publication.trim());
         return this.questionRepo.save(question);
     }
 
@@ -141,7 +141,7 @@ public class QuizServiceImpl implements QuizService {
         }
         Question question = this.questionRepo.findById(questionId)
                 .orElseThrow(() -> new NoSuchElementException("Unknown question id."));
-        if (question.getQuizName().equals(quizName)) {
+        if (!question.getQuizName().equals(quizName)) {
             throw new NoSuchElementException("Unknown question id for the given quiz.");
         }
         return question;

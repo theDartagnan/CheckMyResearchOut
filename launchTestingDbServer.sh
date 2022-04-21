@@ -1,19 +1,19 @@
 #!/bin/bash
-echo "Create MMI Library Server testing network..."
-docker network create mmilibtestnet
+echo "Check My Research Out testing network..."
+docker network create cmrotestnet
 
-echo "Create MMI Library Server Mongo server..."
-docker run -ti --rm --name test-mmilibsrv-mongo-src \
+echo "Create Check My Research Out Mongo server..."
+docker run -ti --rm --name test-cmro-mongo-srv \
     -e MONGO_INITDB_ROOT_USERNAME=admin \
     -e MONGO_INITDB_ROOT_PASSWORD=testpwd \
-    -e MONGO_INITDB_DATABASE=mmilibsrv \
+    -e MONGO_INITDB_DATABASE=checkmro \
     -p "127.0.0.1:27017:27017" \
-    --network mmilibtestnet \
-    mongo:4.2
+    --network cmrotestnet \
+    mongo:4.4.13
 
-echo "MMI Library Server Mongo server stopped."
+echo "Check My Research Out Mongo server server stopped."
 
-echo "Remove MMI Library Server testing network..."
-docker network rm mmilibtestnet
+echo "Check My Research Out testing network..."
+docker network rm cmrotestnet
 
 echo "Bye."

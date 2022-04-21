@@ -71,13 +71,14 @@ public class CMROUserAnswerRepositoryTest {
     @BeforeEach
     public void setUp() {
         // Create 5 users, 1 quiz with 4 questions
-        // 5 users
+        // 6 users
         this.users = List.of(
                 this.mongoTemplate.save(new CMROUser("user1@mail", "lname1", "fname1", "encpass1")),
                 this.mongoTemplate.save(new CMROUser("user2@mail", "lname2", "fname2", "encpass2")),
                 this.mongoTemplate.save(new CMROUser("user3@mail", "lname3", "fname3", "encpass3")),
                 this.mongoTemplate.save(new CMROUser("user4@mail", "lname4", "fname4", "encpass4")),
-                this.mongoTemplate.save(new CMROUser("user5@mail", "lname5", "fname5", "encpass5"))
+                this.mongoTemplate.save(new CMROUser("user5@mail", "lname5", "fname5", "encpass5")),
+                this.mongoTemplate.save(new CMROUser("user6@mail", "lname6", "fname6", "encpass6"))
         );
         // 1 quiz
         this.quiz = this.mongoTemplate.save(new Quiz("Quiz", "Quiz", "Quiz Desc"));
@@ -242,8 +243,9 @@ public class CMROUserAnswerRepositoryTest {
                     ));
         });
         System.out.println("------");
+        assertThat(ranking).hasSize(5);
         for (int i = 0; i < 5; i++) {
-            assertThat(ranking.get(i).getUserId()).as(String.format("User %d is %d", i, i)).isEqualTo(this.users.get(i).getId());
+            assertThat(ranking.get(i).getUserId()).as(String.format("User %d is ranked %d", i, i)).isEqualTo(this.users.get(i).getId());
         }
     }
 }

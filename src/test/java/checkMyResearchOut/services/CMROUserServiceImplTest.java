@@ -21,6 +21,7 @@ package checkMyResearchOut.services;
 import checkMyResearchOut.mongoModel.CMROUser;
 import checkMyResearchOut.mongoModel.CMROUserAnswerRepository;
 import checkMyResearchOut.mongoModel.CMROUserRepository;
+import checkMyResearchOut.security.services.CurrentUserInformationService;
 import checkMyResearchOut.security.services.PasswordEncodingService;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -56,6 +57,9 @@ public class CMROUserServiceImplTest {
     @Mock
     private MailSendingService mailSendingSvc;
 
+    @Mock
+    private CurrentUserInformationService currentUserInformationSvc;
+
     private CMROUserServiceImpl userSvcImpl;
 
     public CMROUserServiceImplTest() {
@@ -72,7 +76,8 @@ public class CMROUserServiceImplTest {
     @BeforeEach
     public void setUp() {
         this.mocks = MockitoAnnotations.openMocks(this);
-        this.userSvcImpl = new CMROUserServiceImpl(userRepo, answerRepo, passwordSvc, mailSendingSvc, 30, 5);
+        this.userSvcImpl = new CMROUserServiceImpl(userRepo, answerRepo, passwordSvc,
+                mailSendingSvc, currentUserInformationSvc, 30, 5);
     }
 
     @AfterEach

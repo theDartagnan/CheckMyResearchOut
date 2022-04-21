@@ -28,6 +28,8 @@ import checkMyResearchOut.services.AnswerService;
 import checkMyResearchOut.services.CMROUserRanking;
 import checkMyResearchOut.services.CMROUserService;
 import checkMyResearchOut.services.QuizService;
+import checkMyResearchOut.services.exceptions.OtherAnswerGivenEarlierException;
+import checkMyResearchOut.services.exceptions.SuccessfulAnswerException;
 import com.fasterxml.jackson.annotation.JsonView;
 import java.util.HashSet;
 import java.util.List;
@@ -117,6 +119,14 @@ public class QuizController {
         return this.quizSvc.getQuestionById(quizName, questionId);
     }
 
+    @DeleteMapping("{quizName}/admin/questions/{questionId}")
+    public ResponseEntity<?> deleteQuizQuestion(@PathVariable String quizName,
+            @PathVariable String questionId) {
+        final Question question = this.quizSvc.getQuestionById(quizName, questionId);
+        this.quizSvc.deleteQuestion(question);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("{quizName}/questions-number")
     public Long getQuizQuestionsNumber(@PathVariable String quizName) {
         final Quiz quiz = this.quizSvc.getQuizByName(quizName);
@@ -127,7 +137,7 @@ public class QuizController {
     public Long getQuizUnsucceededQuestionsNumberForUser(
             @PathVariable String quizName,
             @PathVariable String userId) {
-        final CMROUser user = "myself".equals(userId) ? null : this.userSvc.getUserById(userId);
+        final CMROUser user = "myself".equals(userId) ? this.userSvc.getCurrentUser() : this.userSvc.getUserById(userId);
         final Quiz quiz = this.quizSvc.getQuizByName(quizName);
         return this.quizSvc.getUnansweredOrUnsuccessfulAnsweredQuestionsNumber(quiz, user);
     }
@@ -137,22 +147,22 @@ public class QuizController {
     public Question getRandomQuestionsToAnswerForUser(
             @PathVariable String quizName,
             @PathVariable String userId) {
-        final CMROUser user = "myself".equals(userId) ? null : this.userSvc.getUserById(userId);
+        final CMROUser user = "myself".equals(userId) ? this.userSvc.getCurrentUser() : this.userSvc.getUserById(userId);
         final Quiz quiz = this.quizSvc.getQuizByName(quizName);
         return this.quizSvc.getRandomAnswerableQuestion(quiz, user);
     }
 
-    @GetMapping("{quizName}/questions/{questionId}/answers/{userId}")
+    @PostMapping("{quizName}/questions/{questionId}/answers/{userId}")
     public Boolean answerQuestion(
             @PathVariable String quizName,
             @PathVariable String questionId,
             @PathVariable String userId,
-            @RequestBody List<Integer> propositionIndices) {
+            @RequestBody List<Integer> propositionIndices) throws OtherAnswerGivenEarlierException, SuccessfulAnswerException {
         final Set<Integer> propIndicesSet = new HashSet<>(propositionIndices);
         if (propIndicesSet.size() != propositionIndices.size()) {
             throw new IllegalArgumentException("Duplicated proposition indices");
         }
-        final CMROUser user = "myself".equals(userId) ? null : this.userSvc.getUserById(userId);
+        final CMROUser user = "myself".equals(userId) ? this.userSvc.getCurrentUser() : this.userSvc.getUserById(userId);
         final Question question = this.quizSvc.getQuestionById(quizName, questionId);
         final CMROUserAnswer answer = this.answerSvc.answerAQuestion(user, question, propIndicesSet);
         return answer.isSuccess();
@@ -160,7 +170,7 @@ public class QuizController {
 
     @GetMapping("{quizName}/ranking/{userId}")
     public CMROUserRanking getQuizRanking(@PathVariable String quizName, @PathVariable String userId) {
-        final CMROUser user = "myself".equals(userId) ? null : this.userSvc.getUserById(userId);
+        final CMROUser user = "myself".equals(userId) ? this.userSvc.getCurrentUser() : this.userSvc.getUserById(userId);
         final Quiz quiz = this.quizSvc.getQuizByName(quizName);
         return this.answerSvc.getQuizRanking(quiz, user);
     }

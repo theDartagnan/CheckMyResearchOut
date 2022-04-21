@@ -24,7 +24,7 @@ package checkMyResearchOut.security.services;
  */
 public interface PasswordEncodingService {
 
-    String encodePassword(String clearPassword) throws IllegalArgumentException;
+    String encodePassword(CharSequence clearPassword) throws IllegalArgumentException;
 
-    boolean verifyPassword(String clearPasswordToVerify, String encodedPassword) throws IllegalArgumentException;
+    boolean verifyPassword(CharSequence clearPasswordToVerify, String encodedPassword) throws IllegalArgumentException;
 }

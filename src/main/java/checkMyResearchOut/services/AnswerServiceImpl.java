@@ -27,6 +27,8 @@ import checkMyResearchOut.mongoModel.CMROUserRepository;
 import checkMyResearchOut.mongoModel.Question;
 import checkMyResearchOut.mongoModel.Quiz;
 import checkMyResearchOut.mongoModel.UserIdQuizRank;
+import checkMyResearchOut.services.exceptions.OtherAnswerGivenEarlierException;
+import checkMyResearchOut.services.exceptions.SuccessfulAnswerException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +61,8 @@ public class AnswerServiceImpl implements AnswerService {
     }
 
     @Override
-    public CMROUserAnswer answerAQuestion(CMROUser user, Question question, Set<Integer> propositionIndices) throws IllegalArgumentException {
+    public CMROUserAnswer answerAQuestion(CMROUser user, Question question, Set<Integer> propositionIndices)
+            throws IllegalArgumentException, OtherAnswerGivenEarlierException, SuccessfulAnswerException {
         if (user == null || question == null || propositionIndices == null) {
             throw new IllegalArgumentException("User nor question nor propositions cannot be null.");
         }
@@ -67,11 +70,11 @@ public class AnswerServiceImpl implements AnswerService {
         CMROUserAnswer answer = this.answerRepo.findByQuestionIdAndUser(question.getId(), user).orElse(null);
         if (answer != null) {
             if (answer.isSuccess()) {
-                throw new IllegalArgumentException("Question already successfully answered.");
+                throw new SuccessfulAnswerException("Question already successfully answered.");
             }
             if (answer.getAttempts() > 0 && answer.getLastAttemptDateTime()
                     .plusMinutes(this.answerAttemptTimeoutMinutes).isAfter(LocalDateTime.now())) {
-                throw new IllegalArgumentException(String.format("Answer attempt already given within the last %d minutes.", this.answerAttemptTimeoutMinutes));
+                throw new OtherAnswerGivenEarlierException(String.format("Answer attempt already given within the last %d minutes.", this.answerAttemptTimeoutMinutes));
             }
         }
         // Define if the question is properly answered or not: 
@@ -125,6 +128,10 @@ public class AnswerServiceImpl implements AnswerService {
                 break;
             }
             userRank++;
+        }
+        // Set userRank to -1 if the user is not present in the rankings
+        if (userRank >= userIds.size()) {
+            userRank = -1;
         }
         // Retrieve all users public info from the rank by userId
         final Map<String, CMROUserNamesOnly> usernamesByUserId = this.buildUserNamesByuserIdFromIds(userIds);

@@ -16,19 +16,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package checkMyResearchOut.mongoModel.views;
+package checkMyResearchOut.services.exceptions;
 
 /**
  *
  * @author Rémi Venant
  */
-public interface CMROUserViews {
+public class OtherAnswerGivenEarlierException extends Exception {
 
-    public static interface Normal extends DefaultView.Default {
-
+    /**
+     * Creates a new instance of <code>OtherAnswerGivenEarlierException</code> without detail
+     * message.
+     */
+    public OtherAnswerGivenEarlierException() {
     }
 
-    public static interface WithInfo extends Normal {
-
+    /**
+     * Constructs an instance of <code>OtherAnswerGivenEarlierException</code> with the specified
+     * detail message.
+     *
+     * @param msg the detail message.
+     */
+    public OtherAnswerGivenEarlierException(String msg) {
+        super(msg);
     }
 }

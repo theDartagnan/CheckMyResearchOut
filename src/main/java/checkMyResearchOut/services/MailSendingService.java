@@ -21,6 +21,7 @@ package checkMyResearchOut.services;
 import checkMyResearchOut.mongoModel.CMROUser;
 import javax.mail.MessagingException;
 import org.springframework.mail.MailException;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  *
@@ -28,7 +29,9 @@ import org.springframework.mail.MailException;
  */
 public interface MailSendingService {
 
+    @PreAuthorize("isAnonymous() or hasRole('ADMIN')")
     void sendAccountValidationMail(CMROUser user) throws IllegalArgumentException, MailException, MessagingException;
 
+    @PreAuthorize("isAnonymous() or hasRole('ADMIN')")
     void sendPasswordRenewalMail(CMROUser user) throws IllegalArgumentException, MailException, MessagingException;
 }
