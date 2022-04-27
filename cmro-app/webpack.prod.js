@@ -12,6 +12,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 const PUBLIC_PATH = '/'; // url de base de l'appli
+const API_BASE_URL = 'http://127.0.0.1:8080/api/v1/rest';
 
 module.exports = {
   mode: 'production',
@@ -32,6 +33,7 @@ module.exports = {
     new webpack.DefinePlugin({
       'APP_ENV.APP_PUBLIC_PATH': JSON.stringify(PUBLIC_PATH),
       'APP_ENV.APP_TITLE': JSON.stringify(packageInfo.appTitle),
+      'APP_ENV.API_BASE_URL': JSON.stringify(API_BASE_URL),
     }),
     // Copie directe de fichiers
     // new CopyWebpackPlugin({
