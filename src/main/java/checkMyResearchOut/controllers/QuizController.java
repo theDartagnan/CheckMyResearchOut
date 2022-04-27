@@ -22,18 +22,21 @@ import checkMyResearchOut.mongoModel.CMROUser;
 import checkMyResearchOut.mongoModel.CMROUserAnswer;
 import checkMyResearchOut.mongoModel.Question;
 import checkMyResearchOut.mongoModel.Quiz;
+import checkMyResearchOut.mongoModel.QuizSimpleInformations;
 import checkMyResearchOut.mongoModel.views.QuestionViews;
 import checkMyResearchOut.mongoModel.views.QuizViews;
 import checkMyResearchOut.services.AnswerService;
 import checkMyResearchOut.services.CMROUserRanking;
 import checkMyResearchOut.services.CMROUserService;
 import checkMyResearchOut.services.QuizService;
+import checkMyResearchOut.services.QuizUserInfo;
 import checkMyResearchOut.services.exceptions.OtherAnswerGivenEarlierException;
 import checkMyResearchOut.services.exceptions.SuccessfulAnswerException;
 import com.fasterxml.jackson.annotation.JsonView;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -64,6 +67,12 @@ public class QuizController {
         this.quizSvc = quizSvc;
         this.userSvc = userSvc;
         this.answerSvc = answerSvc;
+    }
+
+    @GetMapping
+    @JsonView(QuizViews.Normal.class)
+    public Stream<QuizSimpleInformations> getQuizzes(@PathVariable String quizName) {
+        return this.quizSvc.getQuizzesWithSimpleInformations();
     }
 
     @PostMapping
@@ -133,13 +142,21 @@ public class QuizController {
         return this.quizSvc.getQuizQuestionsNumber(quiz);
     }
 
-    @GetMapping("{quizName}/unsucceeded-questions-number/{userId}")
-    public Long getQuizUnsucceededQuestionsNumberForUser(
+//    @GetMapping("{quizName}/unsucceeded-questions-number/{userId}")
+//    public Long getQuizUnsucceededQuestionsNumberForUser(
+//            @PathVariable String quizName,
+//            @PathVariable String userId) {
+//        final CMROUser user = "myself".equals(userId) ? this.userSvc.getCurrentUser() : this.userSvc.getUserById(userId);
+//        final Quiz quiz = this.quizSvc.getQuizByName(quizName);
+//        return this.quizSvc.getUnansweredOrUnsuccessfulAnsweredQuestionsNumber(quiz, user);
+//    }
+    @GetMapping("{quizName}/quiz-user-info/{userId}")
+    public QuizUserInfo getQuizUserInfo(
             @PathVariable String quizName,
             @PathVariable String userId) {
         final CMROUser user = "myself".equals(userId) ? this.userSvc.getCurrentUser() : this.userSvc.getUserById(userId);
         final Quiz quiz = this.quizSvc.getQuizByName(quizName);
-        return this.quizSvc.getUnansweredOrUnsuccessfulAnsweredQuestionsNumber(quiz, user);
+        return this.quizSvc.getQuizUserInfo(quizName, user);
     }
 
     @GetMapping("{quizName}/random-question-to-answer/{userId}")
@@ -153,7 +170,7 @@ public class QuizController {
     }
 
     @PostMapping("{quizName}/questions/{questionId}/answers/{userId}")
-    public Boolean answerQuestion(
+    public QuizUserInfo answerQuestion(
             @PathVariable String quizName,
             @PathVariable String questionId,
             @PathVariable String userId,
@@ -165,7 +182,9 @@ public class QuizController {
         final CMROUser user = "myself".equals(userId) ? this.userSvc.getCurrentUser() : this.userSvc.getUserById(userId);
         final Question question = this.quizSvc.getQuestionById(quizName, questionId);
         final CMROUserAnswer answer = this.answerSvc.answerAQuestion(user, question, propIndicesSet);
-        return answer.isSuccess();
+        final QuizUserInfo userInfo = this.quizSvc.getQuizUserInfo(quizName, user);
+        userInfo.setLastAnswerSuccess(answer.isSuccess());
+        return userInfo;
     }
 
     @GetMapping("{quizName}/ranking/{userId}")

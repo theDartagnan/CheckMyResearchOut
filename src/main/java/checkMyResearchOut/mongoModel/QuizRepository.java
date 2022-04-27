@@ -19,6 +19,7 @@
 package checkMyResearchOut.mongoModel;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 /**
@@ -26,6 +27,8 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  * @author Rémi Venant
  */
 public interface QuizRepository extends PagingAndSortingRepository<Quiz, String> {
+
+    Stream<QuizSimpleInformations> findSimpleInfoBy();
 
     Optional<Quiz> findByName(String name);
 }

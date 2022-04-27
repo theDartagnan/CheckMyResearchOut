@@ -37,6 +37,9 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import checkMyResearchOut.mongoModel.QuizRepository;
+import checkMyResearchOut.mongoModel.QuizSimpleInformations;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 /**
  *
@@ -61,6 +64,11 @@ public class QuizServiceImpl implements QuizService {
         this.questionRepo = questionRepo;
         this.answerRepo = answerRepo;
         this.answerAttemptTimeoutMinutes = answerAttemptTimeoutMinutes;
+    }
+
+    @Override
+    public Stream<QuizSimpleInformations> getQuizzesWithSimpleInformations() {
+        return this.quizRepo.findSimpleInfoBy();
     }
 
     @Override
@@ -182,16 +190,15 @@ public class QuizServiceImpl implements QuizService {
         return this.questionRepo.countByQuizName(quiz.getName());
     }
 
-    @Override
-    public Long getUnansweredOrUnsuccessfulAnsweredQuestionsNumber(Quiz quiz, CMROUser user) throws IllegalArgumentException {
-        if (quiz == null || user == null) {
-            throw new IllegalArgumentException("Quiz nor user cannot be null.");
-        }
-        final long nbQuestions = this.questionRepo.countByQuizName(quiz.getName());
-        final long nbSuccessfulAnswers = this.answerRepo.countByQuizNameAndUserAndSuccessIsTrue(quiz.getName(), user);
-        return nbQuestions - nbSuccessfulAnswers;
-    }
-
+//    @Override
+//    public Long getUnansweredOrUnsuccessfulAnsweredQuestionsNumber(Quiz quiz, CMROUser user) throws IllegalArgumentException {
+//        if (quiz == null || user == null) {
+//            throw new IllegalArgumentException("Quiz nor user cannot be null.");
+//        }
+//        final long nbQuestions = this.questionRepo.countByQuizName(quiz.getName());
+//        final long nbSuccessfulAnswers = this.answerRepo.countByQuizNameAndUserAndSuccessIsTrue(quiz.getName(), user);
+//        return nbQuestions - nbSuccessfulAnswers;
+//    }
     public List<Question> getAnswerableQuestions(Quiz quiz, CMROUser user) throws IllegalArgumentException {
         if (quiz == null || user == null) {
             throw new IllegalArgumentException("Quiz nor user cannot be null.");
@@ -206,6 +213,30 @@ public class QuizServiceImpl implements QuizService {
         return this.questionRepo.findByQuizName(quiz.getName())
                 .filter(q -> !questionIdsToRemove.contains(q.getId()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public QuizUserInfo getQuizUserInfo(String quizName, CMROUser user) throws IllegalArgumentException {
+        if (quizName == null || user == null) {
+            throw new IllegalArgumentException("Quiz name nor user cannot be null.");
+        }
+        final AtomicLong successfullyAnsweredQuestions = new AtomicLong(0);
+        // Compute a set of question id the user has already successfully answered or the user's last attempt is too early
+        // and count successfully answered questions
+        final Set<String> questionIdsToRemove = this.answerRepo.findByQuizNameAndUser(quizName, user)
+                .filter(a -> a.isSuccess()
+                || a.getLastAttemptDateTime().plusMinutes(this.answerAttemptTimeoutMinutes).isAfter(LocalDateTime.now()))
+                .map(a -> {
+                    if (a.isSuccess()) {
+                        successfullyAnsweredQuestions.incrementAndGet();
+                    }
+                    return a.getQuestionId();
+                })
+                .collect(Collectors.toSet());
+        // count questions the user can answer
+        final long answerableQuestionsNum = this.questionRepo.countByQuizNameAndIdNotIn(quizName, questionIdsToRemove);
+
+        return new QuizUserInfo(successfullyAnsweredQuestions.get(), answerableQuestionsNum > 0);
     }
 
     @Override

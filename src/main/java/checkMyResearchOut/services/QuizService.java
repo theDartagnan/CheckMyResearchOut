@@ -22,8 +22,10 @@ import checkMyResearchOut.mongoModel.AnswerProposition;
 import checkMyResearchOut.mongoModel.CMROUser;
 import checkMyResearchOut.mongoModel.Question;
 import checkMyResearchOut.mongoModel.Quiz;
+import checkMyResearchOut.mongoModel.QuizSimpleInformations;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Stream;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -32,6 +34,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
  * @author Rémi Venant
  */
 public interface QuizService {
+
+    /**
+     *
+     * @return
+     */
+    @PreAuthorize("hasRole('USER')")
+    Stream<QuizSimpleInformations> getQuizzesWithSimpleInformations();
 
     /**
      * Create a quiz
@@ -146,8 +155,18 @@ public interface QuizService {
      * @return
      * @throws IllegalArgumentException if quiz or user is null
      */
+//    @PreAuthorize("(hasRole('USER') and #user.id == principal.userId) or hasRole('ADMIN')")
+//    Long getUnansweredOrUnsuccessfulAnsweredQuestionsNumber(Quiz quiz, CMROUser user) throws IllegalArgumentException;
+    /**
+     * Return the user info about a quiz
+     *
+     * @param quizName
+     * @param user
+     * @return
+     * @throws IllegalArgumentException if quiz or user is null
+     */
     @PreAuthorize("(hasRole('USER') and #user.id == principal.userId) or hasRole('ADMIN')")
-    Long getUnansweredOrUnsuccessfulAnsweredQuestionsNumber(Quiz quiz, CMROUser user) throws IllegalArgumentException;
+    QuizUserInfo getQuizUserInfo(String quizName, CMROUser user) throws IllegalArgumentException;
 
     /**
      * return a list of unanswered or unsuccessfully answered questions

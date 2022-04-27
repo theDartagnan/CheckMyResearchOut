@@ -18,22 +18,15 @@
  */
 package checkMyResearchOut.mongoModel;
 
-import java.util.Collection;
-import java.util.stream.Stream;
-import org.springframework.data.repository.PagingAndSortingRepository;
-
 /**
  *
  * @author Rémi Venant
  */
-public interface QuestionRepository extends PagingAndSortingRepository<Question, String> {
+public interface QuizSimpleInformations {
 
-    Stream<Question> findByQuizName(String quizName);
+    String getId();
 
-    long countByQuizName(String quizName);
-    
-    long countByQuizNameAndIdNotIn(String quizName, Collection<String> ids);
+    String getName();
 
-    void deleteByQuizName(String quizName);
-
+    String getFullName();
 }
