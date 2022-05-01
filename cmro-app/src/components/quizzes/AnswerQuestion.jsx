@@ -1,4 +1,5 @@
 import React, { useEffect, useReducer, useContext } from 'react';
+import classNames from 'classnames';
 import { observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
@@ -11,31 +12,9 @@ import Button from 'react-bootstrap/Button';
 import LoadingButton from '../core/LoadingButton';
 import GotoQuestionButton from './GotoQuestionButton';
 import RootStore from '../../RootStore';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import Loading from '../core/Loading';
 
-async function attempAutoLog(globalModelHdlr, navigate) {
-  if (!globalModelHdlr.loggedUser.isAuthenticated) {
-    try {
-      console.log('AnswerQuestion: Attempt auto log');
-      await globalModelHdlr.attemptAutoLogin();
-    } catch (error) {
-      console.log('AnswerQuestion: Auto log failed, go to login');
-      navigate('/auth/login');
-      return;
-    }
-  }
-  if (!globalModelHdlr.currentQuiz) {
-    try {
-      console.log('AnswerQuestion: Attempt auto quiz retrieval');
-      await globalModelHdlr.attemptFindPreviousQuiz();
-    } catch (error) {
-      console.log('AnswerQuestion: Auto quiz retrieval, go to quizzes: ' + error.message);
-      navigate('/quizzes');
-      return;
-    }
-  }
-}
+import style from './AnswerQuestion.scss';
 
 function _QuizQuestionForm({ question, onSubmit, onAnswering }) {
   const submit = (e) => {
@@ -56,7 +35,7 @@ function _QuizQuestionForm({ question, onSubmit, onAnswering }) {
               {
                 question.propositions.map((proposition) => (
                   <Form.Group
-                    className="mb-1"
+                    className={classNames('mb-3', style.questionCheckbox)}
                     key={proposition.index}
                     controlId={`formQuestionProposition_${proposition.index}`}
                   >
@@ -69,7 +48,7 @@ function _QuizQuestionForm({ question, onSubmit, onAnswering }) {
                   </Form.Group>
                 ))
               }
-              <LoadingButton variant="primary" type="submit" loading={onAnswering}>
+              <LoadingButton className="mt-4" variant="primary" type="submit" loading={onAnswering}>
                 Répondre au questionnaire
               </LoadingButton>
             </fieldset>
@@ -136,25 +115,31 @@ function AnswerQuestion() {
   const [state, dispatch] = useReducer(reduce, null, createState);
 
   useEffect(() => {
-    attempAutoLog(globalModelHdlr, navigate);
-  }, [globalModelHdlr, navigate]);
-
-  useEffect(() => {
-    // If the question is not answered but we do not have any question : logical error
-    // if (!state.questionAnswered && !globalModelHdlr.currentQuiz?.currentQuestion) {
-    //   console.warn('Cannot show unsanswered quizAnswer component without any current question. Back to home.');
-    //   navigate('/');
-    //   return false;
-    // }
-    // If we do not have answered the question yet
-    if (globalModelHdlr.currentQuiz && globalModelHdlr.currentQuiz.isReady
-      && !state.onAnswering && !state.questionAnswered && globalModelHdlr.currentQuiz
-      && !globalModelHdlr.currentQuiz.currentQuestion) {
-        console.log('AnswerQuestion: renewQuestion');
-        globalModelHdlr.currentQuiz.renewQuestion();
-    }
-  }, [globalModelHdlr.currentQuiz, globalModelHdlr.currentQuiz?.isReady,
-    globalModelHdlr.currentQuiz?.currentQuestion, state.onAnswering, state.questionAnswered]);
+    globalModelHdlr.attemptAutoLogin(true).then(() => {
+      // Attempt autologin with quiz: redirect if user not logged or quiz not retrieved
+      if (!globalModelHdlr.loggedUser.isReady) {
+        navigate('/auth/login');
+        throw new Error('Failed to autolog');
+      }
+      if (!globalModelHdlr.currentQuiz.isReady) {
+        navigate('/quizzes');
+        throw new Error('Failed to autolog');
+      }
+    }, (error) => {
+      console.warn(`AnswerQuestion: attempt login failed: ${error.message}`);
+      throw error;
+    }).then(() => {
+      // Autologin succeeded, attempt to renew the question if necessairy
+      if (!state.questionAnswered) {
+        try {
+          return globalModelHdlr.currentQuiz.renewQuestion();
+        } catch (error) {
+          console.warn(`AnswerQuestion: cannot auto retrieve the question: ${error.message}`);
+        }
+      }
+      return globalModelHdlr.currentQuiz;
+    });
+  }, [globalModelHdlr, navigate, state.questionAnswered]);
 
   const answerQuestion = async () => {
     if (state.onAnswering) {
@@ -172,17 +157,21 @@ function AnswerQuestion() {
 
   const gotoNextQuestion = () => dispatch({ type: 'reset' });
 
+  let inner = null;
+
   if (!globalModelHdlr.currentQuiz || !globalModelHdlr.currentQuiz.isReady
     || (!globalModelHdlr.currentQuiz.currentQuestion && !state.questionAnswered)) {
-    return (
-      <h2><FontAwesomeIcon icon={faSpinner} pulse /></h2>
+    inner = (
+      <>
+        <h3>Chargement de la question</h3>
+        <Loading />
+      </>
     );
-  }
-
-  // If the question was answered and we did not caught any error : we just show the result message
-  // and the possible actions
-  if (state.questionAnswered) {
-    return (
+  } else if (state.questionAnswered) {
+    // If the question was answered and we did not caught any error :
+    // we just show the result message
+    // and the possible actions
+    inner = (
       <>
         <Row>
           <Col>
@@ -195,43 +184,58 @@ function AnswerQuestion() {
             }
           </Col>
         </Row>
-        <Row>
+        <Row className="justify-content-between mt-3">
           <Col>
             <GotoQuestionButton
               quiz={globalModelHdlr.currentQuiz}
               gotoQuestion={gotoNextQuestion}
+              otherQuestion
+              className="h-100"
             />
-            <LinkContainer to={`/quizzes/${globalModelHdlr.currentQuiz.name}/analytics`}>
-              <Button variant="success">Classement & ranking</Button>
+          </Col>
+          <Col>
+            <LinkContainer to={`/quizzes/${globalModelHdlr.currentQuiz.name}/analytics/stats`}>
+              <Button variant="primary" className="h-100">Classement & ranking</Button>
             </LinkContainer>
+          </Col>
+          <Col>
             <LinkContainer to={`/quizzes/${globalModelHdlr.currentQuiz.name}`}>
-              <Button variant="success">Retour à la présentation du questionnaire</Button>
+              <Button variant="primary" className="h-100">Retour au questionnaire</Button>
             </LinkContainer>
           </Col>
         </Row>
       </>
     );
+  } else {
+    // Otherwise (the question was not answered): we show the form and possibily the error
+    inner = (
+      <>
+        <Row>
+          <Col>
+            <QuizQuestionForm
+              question={globalModelHdlr.currentQuiz.currentQuestion}
+              onSubmit={answerQuestion}
+              onAnswering={state.onAnswering}
+            />
+          </Col>
+        </Row>
+        {
+          state.error && (
+            <Row>
+              <Col><Alert className="mt-3" variant="danger">{state.error.message}</Alert></Col>
+            </Row>
+          )
+        }
+      </>
+    );
   }
-  // Otherwise (the question was not answered): we show the form and possibily the error
+
   return (
-    <>
-      <Row>
-        <Col>
-          <QuizQuestionForm
-            question={globalModelHdlr.currentQuiz.currentQuestion}
-            onSubmit={answerQuestion}
-            onAnswering={state.onAnswering}
-          />
-        </Col>
-      </Row>
-      {
-        state.error && (
-          <Row>
-            <Col><Alert className="mt-3" variant="danger">{state.error.message}</Alert></Col>
-          </Row>
-        )
-      }
-    </>
+    <Row className="justify-content-md-center">
+      <Col md={10} lg={8} xl={6}>
+        { inner }
+      </Col>
+    </Row>
   );
 }
 

@@ -6,18 +6,21 @@ import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBan } from '@fortawesome/free-solid-svg-icons';
 
-function GotoQuestionButton({ quiz, gotoQuestion }) {
+function GotoQuestionButton({
+  quiz, gotoQuestion, otherQuestion, className,
+}) {
   if (quiz.quizUserInfo.canAnswerAQuestion) {
+    const btnTxt = otherQuestion ? 'Répondre à une autre question' : 'Répondre à une question';
     return gotoQuestion ? (
-      <Button variant="primary" onClick={gotoQuestion}>Répondre à une question</Button>
+      <Button variant="primary" onClick={gotoQuestion} className={className}>{btnTxt}</Button>
     ) : (
       <LinkContainer to="/answer-question">
-        <Button variant="primary">Répondre à une question</Button>
+        <Button variant="primary" className={className}>{btnTxt}</Button>
       </LinkContainer>
     );
   } if (quiz.quizUserInfo.successfullyAnsweredQuestions < quiz.questionsNumber) {
     return (
-      <Button variant="danger" disabled>
+      <Button variant="danger" disabled className={className}>
         <FontAwesomeIcon icon={faBan} className="me-2" />
         Vous ne pouvez pas répondre tout de suite à de nouvelle question,&nbsp;
         merci de revenir dans quelques minutes
@@ -25,7 +28,7 @@ function GotoQuestionButton({ quiz, gotoQuestion }) {
     );
   }
   return (
-    <Button variant="danger" disabled>
+    <Button variant="danger" disabled className={className}>
       <FontAwesomeIcon icon={faBan} className="me-2" />
       Vous ne pouvez pas répondre tout de suite à de nouvelle question,&nbsp;
       merci de revenir dans quelques minutes
@@ -43,10 +46,14 @@ GotoQuestionButton.propTypes = {
     }).isRequired,
   }).isRequired,
   gotoQuestion: PropTypes.func,
+  otherQuestion: PropTypes.bool,
+  className: PropTypes.string,
 };
 
 GotoQuestionButton.defaultProps = {
   gotoQuestion: null,
+  otherQuestion: false,
+  className: null,
 };
 
 export default observer(GotoQuestionButton);

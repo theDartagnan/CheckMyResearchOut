@@ -1,15 +1,16 @@
-import { makeAutoObservable, runInAction } from 'mobx';
+/* eslint-disable class-methods-use-this */
+import { makeAutoObservable } from 'mobx';
 import LoggedUser from './LoggedUser';
 import CurrentQuiz from './CurrentQuiz';
-import { createUser } from '../services/RESTEndpoints';
-import cacheSvc from '../services/CacheService';
+import {
+  createUser, startAccountValidation, checkAccountValidation,
+  validateAccount, startPasswordRenewal, checkPasswordRenewal, renewPassword,
+} from '../services/RESTEndpoints';
 
 class GlobalModelHandler {
   _loggedUser = new LoggedUser();
 
-  _currentQuiz = null;
-
-  _currentQuizLoading = false;
+  _currentQuiz = new CurrentQuiz();
 
   constructor() {
     makeAutoObservable(this);
@@ -23,81 +24,81 @@ class GlobalModelHandler {
     return this._currentQuiz;
   }
 
-  isAuthenticated() {
-    return this._loggedUser.isAuthenticated;
-  }
-
-  async attemptAutoLogin() {
-    return this._loggedUser.fetch();
-  }
-
-  async login({ username, password, rememberMe }) {
-    return this._loggedUser.login({ username, password, rememberMe });
+  get isUserOrQuizBusy() {
+    return this._loggedUser.isPending || this._currentQuiz.isPending;
   }
 
   /* eslint-disable-next-line class-methods-use-this */
-  async createAccount({ mail, password, rememberMe }) {
-    await createUser({ mail, password, rememberMe });
+  async createAccount({
+    mail, password, firstname, lastname,
+  }) {
+    await createUser({
+      mail, password, firstname, lastname,
+    }, true);
+    await startAccountValidation({ encodedMail: encodeURI(mail) }, true);
     return true;
   }
 
-  async switchQuiz(quizName) {
-    if (this._currentQuizLoading) {
-      return this._currentQuizLoading;
+  async attemptAutoLogin(withQuiz = false) {
+    if (this.isUserOrQuizBusy) {
+      console.warn('GMH: Operation running on user or quiz. cancel the autologin order');
+      return false;
     }
-    console.log("GMH: switchQuiz");
     try {
-      if (this._currentQuiz && this._currentQuiz.name === quizName) {
-        if (this._currentQuiz.isInit || this._currentQuiz.isReady) {
-          console.log("Fetching the current quiz");
-          return this._currentQuiz.fetch();
-        }
-        return this._currentQuiz;
+      if (this._loggedUser.isInit) {
+        await this._loggedUser.fetch(true);
       }
-      console.log("Creating and fetchiung the current quiz");
-      const quiz = new CurrentQuiz(quizName);
-      runInAction(() => {
-        this._currentQuizLoading = quiz;
-      });
-      await quiz.fetch();
-      runInAction(() => {
-        this._currentQuiz = quiz;
-      });
-      return quiz;
-    } finally {
-      runInAction(() => {
-        this._currentQuizLoading = null;
-      })
+      if (withQuiz && this._currentQuiz.isInit) {
+        await this._currentQuiz.attemptFindPreviousQuiz(true);
+      }
+      return true;
+    } catch (error) {
+      return false;
     }
-
   }
 
-  async attemptFindPreviousQuiz() {
-    if (this._currentQuizLoading) {
-      return this._currentQuizLoading;
-    }
-    console.log("GMH: attemptFindPReviousQuiz");
-    try {
-      const lastQuizName = cacheSvc.getLocal('LAST_QUIZ_NAME');
-      if (!lastQuizName) {
-        throw new Error('No Previous quiz');
-      }
-      console.log('last quiz name: ' + lastQuizName);
-      const quiz = new CurrentQuiz(lastQuizName);
-      runInAction(() => {
-        this._currentQuizLoading = quiz;
-      })
-      await quiz.fetch();
-      runInAction(() => {
-        this._currentQuiz = quiz;
-      });
-      return quiz;
-    } finally {
-      runInAction(() => {
-        this._currentQuizLoading = null;
-      })
-    }
+  async sendValidationMail({ mail }) {
+    await startAccountValidation({ encodedMail: encodeURI(mail) }, true);
+    return true;
+  }
 
+  async checkAccountValidation({ encodedMail }) {
+    try {
+      await checkAccountValidation({ encodedMail }, true);
+      return true;
+    } catch (error) {
+      if (error.status === 404) {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  async validateAccount({ encodedMail, token }) {
+    await validateAccount({ encodedMail, token }, true);
+    return true;
+  }
+
+  async sendPasswordRenewalMail({ mail }) {
+    await startPasswordRenewal({ encodedMail: encodeURI(mail) }, true);
+    return true;
+  }
+
+  async checkPasswordRenewal({ encodedMail }) {
+    try {
+      await checkPasswordRenewal({ encodedMail }, true);
+      return true;
+    } catch (error) {
+      if (error.status === 404) {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  async renewPassword({ encodedMail, token, password }) {
+    await renewPassword({ encodedMail, token, password }, true);
+    return true;
   }
 }
 

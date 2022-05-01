@@ -19,7 +19,7 @@ function LogJoinIn() {
   const navigate = useNavigate();
 
   const login = async ({ mail, password, rememberMe }) => {
-    await globalModelHdlr.login({ mail, password, rememberMe });
+    await globalModelHdlr.loggedUser.login({ mail, password, rememberMe });
     navigate('/quizzes');
   };
 
@@ -29,32 +29,35 @@ function LogJoinIn() {
     await globalModelHdlr.createAccount({
       mail, password, firstname, lastname,
     });
+    navigate('account-created');
   };
 
   return (
-    <>
-      <Row>
-        <Col>
-          <Nav variant="pills" defaultActiveKey="login">
-            <Nav.Item>
-              <Nav.Link as={Link} to="login" eventKey="login">Se connecter</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link as={Link} to="create-account" eventKey="create-account">Créer un compte</Nav.Link>
-            </Nav.Item>
-          </Nav>
-        </Col>
-      </Row>
-      <Row>
-        <Col>
-          <Routes>
-            <Route path="/login" element={<LogIn attemptLogin={login} />} />
-            <Route path="/create-account" element={<JoinIn attemptCreate={createAccount} />} />
-            <Route path="/account-created" element={<AccountCreated />} />
-          </Routes>
-        </Col>
-      </Row>
-    </>
+    <Row className="justify-content-md-center">
+      <Col md={10} lg={8} xl={6}>
+        <Row className="border-bottom border-primary mb-4">
+          <Col>
+            <Nav defaultActiveKey="login" className="justify-content-center">
+              <Nav.Item>
+                <Nav.Link as={Link} to="login" eventKey="login">Se connecter</Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link as={Link} to="create-account" eventKey="create-account">Créer un compte</Nav.Link>
+              </Nav.Item>
+            </Nav>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <Routes>
+              <Route path="/login" element={<LogIn attemptLogin={login} />} />
+              <Route path="/create-account" element={<JoinIn attemptCreate={createAccount} />} />
+              <Route path="/account-created" element={<AccountCreated />} />
+            </Routes>
+          </Col>
+        </Row>
+      </Col>
+    </Row>
   );
 }
 

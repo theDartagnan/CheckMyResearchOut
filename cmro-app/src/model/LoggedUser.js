@@ -31,7 +31,6 @@ class LoggedUser extends AbstractRESTEntity {
       delete: override,
       login: action,
       logout: action,
-      isAuthenticated: computed,
       reset: action,
     });
   }
@@ -52,45 +51,52 @@ class LoggedUser extends AbstractRESTEntity {
     return this._admin;
   }
 
-  get isAuthenticated() {
-    return this._state === AbstractRESTEntity.READY_STATE && this._mail !== null;
-  }
-
   reset() {
     this._mail = null;
     this._firstname = null;
     this._lastname = null;
     this._admin = false;
+    this._state = AbstractRESTEntity.INIT_STATE;
   }
 
-  async login({ username, password, rememberMe }) {
-    if (!AbstractRESTEntity.INIT_STATE) {
+  async login({ mail, password, rememberMe }, silentOnError = false) {
+    if (!this.isInit) {
       throw new Error('User must is already logged in');
     }
     runInAction(() => {
       this.reset();
       this._state = AbstractRESTEntity.PENDING_STATE;
     });
-    await login({ username, password, rememberMe });
-    await this.fetch();
+    await login({ mail, password, rememberMe }, true);
+    await this.fetch(silentOnError, true);
     return this;
   }
 
   async logout() {
-    if (!this.READY_STATE) {
+    if (!this.isReady) {
       throw new Error('User must be ready to logout');
     }
-    return logout();
+    try {
+      await logout();
+    } finally {
+      runInAction(() => {
+        this.reset();
+      });
+    }
+    return true;
   }
 
-  async fetch() {
+  async fetch(silentOnError, forceFetch) {
+    if (this.isPending && !forceFetch) {
+      return this;
+    }
     runInAction(() => {
       this._state = AbstractRESTEntity.PENDING_STATE;
     });
-
     try {
-      const data = await getMyself();
+      const data = await getMyself(silentOnError);
       runInAction(() => {
+        this.reset();
         this._mail = data.mail;
         this._lastname = data.lastname;
         this._firstname = data.firstname;
@@ -102,7 +108,6 @@ class LoggedUser extends AbstractRESTEntity {
       runInAction(() => {
         this._state = AbstractRESTEntity.INIT_STATE;
       });
-
       throw error;
     }
   }
@@ -111,22 +116,13 @@ class LoggedUser extends AbstractRESTEntity {
     if (!this.isReady) {
       throw new Error('User must be ready to be updated');
     }
+    const data = await patchMyself({ firstname, lastname, password });
     runInAction(() => {
-      this._state = AbstractRESTEntity.PENDING_STATE;
+      this._lastname = data.lastname;
+      this._firstname = data.firstname;
+      this._admin = data.admin;
     });
-    try {
-      const data = await patchMyself({ firstname, lastname, password });
-      runInAction(() => {
-        this._lastname = data.lastname;
-        this._firstname = data.firstname;
-        this._admin = data.admin;
-      });
-      return this;
-    } finally {
-      runInAction(() => {
-        this._state = AbstractRESTEntity.READY_STATE;
-      });
-    }
+    return this;
   }
 
   async delete() {
@@ -134,20 +130,13 @@ class LoggedUser extends AbstractRESTEntity {
       throw new Error('User must be ready to be updated');
     }
     try {
-      await deleteMyself();
+      await deleteMyself({});
       runInAction(() => {
         this.reset();
       });
-      return this;
+      return true;
     } finally {
-      try {
-        await logout();
-      } catch (error) {
-        console.warn(`Error while logout after account deletion: ${error.message}`);
-      }
-      runInAction(() => {
-        this._state = AbstractRESTEntity.INIT_STATE;
-      });
+      await logout();
     }
   }
 }

@@ -132,7 +132,6 @@ function JoinIn({ attemptCreate }) {
                 </Form.Text>
               )
             }
-
           </Form.Group>
 
           <LoadingButton variant="primary" type="submit" loading={state.onCreating}>

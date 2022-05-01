@@ -4,48 +4,34 @@ import { observer } from 'mobx-react';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import Loading from './core/Loading';
 import RootStore from '../RootStore';
-
-async function attempAutoLog(globalModelHdlr, navigate) {
-  if (!globalModelHdlr.loggedUser.isAuthenticated) {
-    try {
-      console.log('HomeAutoDiscovery: Attempt auto log');
-      await globalModelHdlr.attemptAutoLogin();
-    } catch (error) {
-      console.log('HomeAutoDiscovery: Auto log failed, go to login');
-      navigate('/auth/login');
-      return;
-    }
-  }
-  if (!globalModelHdlr.currentQuiz) {
-    try {
-      console.log('HomeAutoDiscovery: Attempt auto quiz retrieval');
-      await globalModelHdlr.attemptFindPreviousQuiz();
-    } catch (error) {
-      console.log('HomeAutoDiscovery: Auto quiz retrieval, go to quizzes: ' + error.message);
-      navigate('/quizzes');
-      return;
-    }
-  }
-  console.log('go to current quiz');
-  navigate(`/quizzes/${globalModelHdlr.currentQuiz.name}`);
-}
 
 function HomeAutoDiscovery() {
   const navigate = useNavigate();
   const { globalModelHdlr } = useContext(RootStore);
 
   useEffect(() => {
-    attempAutoLog(globalModelHdlr, navigate);
-  }, []);
+    globalModelHdlr.attemptAutoLogin(true).then(() => {
+      if (!globalModelHdlr.loggedUser.isReady) {
+        navigate('/auth/login');
+        return;
+      }
+      if (!globalModelHdlr.currentQuiz.isReady) {
+        navigate('/quizzes');
+        return;
+      }
+      navigate(`/quizzes/${globalModelHdlr.currentQuiz.name}`);
+    }, (error) => {
+      console.warn(`HomeAutoDiscovery: attempt login failed: ${error.message}`);
+    });
+  }, [globalModelHdlr, navigate]);
 
   return (
-    <Row>
-      <Col>
+    <Row className="justify-content-md-center">
+      <Col md={10} lg={8} xl={6}>
         <h1>Chargement de l&lsquo;application</h1>
-        <h2><FontAwesomeIcon icon={faSpinner} pulse /></h2>
+        <Loading />
       </Col>
     </Row>
   );

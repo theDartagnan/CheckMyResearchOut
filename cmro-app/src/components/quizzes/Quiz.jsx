@@ -3,34 +3,11 @@ import { observer } from 'mobx-react';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { LinkContainer } from 'react-router-bootstrap';
 import Button from 'react-bootstrap/Button';
+import Loading from '../core/Loading';
 import GotoQuestionButton from './GotoQuestionButton';
 import RootStore from '../../RootStore';
-
-async function attempAutoLog(globalModelHdlr, navigate, quizName) {
-  if (!globalModelHdlr.loggedUser.isAuthenticated) {
-    try {
-      console.log('Quiz: Attempt auto log');
-      await globalModelHdlr.attemptAutoLogin();
-    } catch (error) {
-      console.log('Quiz: Auto log failed, go to login');
-      navigate('/auth/login');
-      return;
-    }
-  }
-  if (!globalModelHdlr.currentQuiz || quizName !== globalModelHdlr.currentQuiz.name) {
-    try {
-      console.log('Quiz: Attempt to switch and retrieve quiz ' + quizName);
-      await globalModelHdlr.switchQuiz(quizName);
-    } catch (error) {
-      console.log('Quiz: fail to switch and retrieve quiz: ' + error.message);
-      navigate('/quizzes');
-    }
-  }
-}
 
 function Quiz() {
   const { quizName } = useParams();
@@ -38,28 +15,53 @@ function Quiz() {
   const { globalModelHdlr } = useContext(RootStore);
 
   useEffect(() => {
-    attempAutoLog(globalModelHdlr, navigate, quizName);
+    globalModelHdlr.attemptAutoLogin(false).then(() => {
+      if (!globalModelHdlr.loggedUser.isReady) {
+        navigate('/auth/login');
+        return;
+      }
+      if (globalModelHdlr.currentQuiz.isInit || globalModelHdlr.currentQuiz.name !== quizName) {
+        globalModelHdlr.currentQuiz.fetch({ quizName }).catch(() => {
+          navigate('/quizzes');
+        });
+      }
+    }, (error) => {
+      console.warn(`Quiz: attempt login failed: ${error.message}`);
+    });
   }, [globalModelHdlr, navigate, quizName]);
 
-  return globalModelHdlr.currentQuiz && globalModelHdlr.currentQuiz.isReady ? (
-    <>
-      <Row>
-        <Col>
-          <h1>{globalModelHdlr.currentQuiz.fullName}</h1>
-          <span>{globalModelHdlr.currentQuiz.description}</span>
-        </Col>
-      </Row>
-      <Row>
-        <Col>
-          <GotoQuestionButton quiz={globalModelHdlr.currentQuiz} />
-          <LinkContainer to={`/quizzes/${quizName}/analytics`}>
-            <Button variant="success">Classement & ranking</Button>
-          </LinkContainer>
-        </Col>
-      </Row>
-    </>
-  ) : (
-    <h2><FontAwesomeIcon icon={faSpinner} pulse /></h2>
+  return (
+    <Row className="justify-content-md-center">
+      <Col md={10} lg={8} xl={6}>
+        {
+          globalModelHdlr.currentQuiz.isReady ? (
+            <>
+              <Row>
+                <Col>
+                  <h1>{globalModelHdlr.currentQuiz.fullName}</h1>
+                  <p className="my-2 p-1 bg-secondary text-light">{globalModelHdlr.currentQuiz.description}</p>
+                </Col>
+              </Row>
+              <Row className="justify-content-between mt-3">
+                <Col>
+                  <GotoQuestionButton quiz={globalModelHdlr.currentQuiz} />
+                </Col>
+                <Col className="text-end">
+                  <LinkContainer to={`/quizzes/${quizName}/analytics/stats`}>
+                    <Button variant="success" className="ms-auto">Classement & ranking</Button>
+                  </LinkContainer>
+                </Col>
+              </Row>
+            </>
+          ) : (
+            <>
+              <h1>Chargement du Quiz</h1>
+              <Loading />
+            </>
+          )
+        }
+      </Col>
+    </Row>
   );
 }
 

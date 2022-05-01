@@ -22,6 +22,9 @@ class QuizCollection extends AbstractRESTEntity {
   }
 
   async fetch() {
+    if (this.isPending) {
+      return this;
+    }
     runInAction(() => {
       this._state = AbstractRESTEntity.PENDING_STATE;
     });
