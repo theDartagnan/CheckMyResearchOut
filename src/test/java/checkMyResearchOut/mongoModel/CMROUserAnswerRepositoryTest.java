@@ -135,10 +135,10 @@ public class CMROUserAnswerRepositoryTest {
         this.mongoTemplate.save(this.generateAnswer(q2, this.users.get(3), true, 1, "2022-02-01T16:00:00"));
         this.mongoTemplate.save(this.generateAnswer(q3, this.users.get(3), false, 1, "2022-02-01T17:00:00"));
         this.mongoTemplate.save(this.generateAnswer(q4, this.users.get(3), true, 1, "2022-02-01T18:00:00"));
-        //U5 answers only 3 questions, all correct with 1 attempt each
+        //U5 answers only 3 questions, all correct with 1 attempt each expect 2 for Q4
         this.mongoTemplate.save(this.generateAnswer(q1, this.users.get(4), true, 1, "2022-02-01T15:00:00"));
         this.mongoTemplate.save(this.generateAnswer(q2, this.users.get(4), true, 1, "2022-02-01T16:00:00"));
-        this.mongoTemplate.save(this.generateAnswer(q4, this.users.get(4), true, 1, "2022-02-01T18:00:00"));
+        this.mongoTemplate.save(this.generateAnswer(q4, this.users.get(4), true, 2, "2022-02-01T18:00:00"));
     }
 
     private CMROUserAnswer generateAnswer(Question q, CMROUser u, boolean correct, int nbAttempts, String lastAttempt) {
@@ -159,6 +159,9 @@ public class CMROUserAnswerRepositoryTest {
         this.mongoTemplate.remove(new BasicQuery("{}"), Question.class);
         this.mongoTemplate.remove(new BasicQuery("{}"), Quiz.class);
         this.mongoTemplate.remove(new BasicQuery("{}"), CMROUser.class);
+        this.quiz = null;
+        this.questions = null;
+        this.users = null;
     }
 
     /**

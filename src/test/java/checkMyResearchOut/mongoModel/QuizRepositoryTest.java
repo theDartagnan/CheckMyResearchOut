@@ -19,7 +19,9 @@
 package checkMyResearchOut.mongoModel;
 
 import checkMyResearchOut.configuration.MongoConfiguration;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -88,6 +90,21 @@ public class QuizRepositoryTest {
         Optional<Quiz> optQuiz = this.testedRepo.findByName("quiz_2");
         assertThat(optQuiz).isNotEmpty();
         assertThat(optQuiz.get().getId()).isEqualTo(quizIds[2]);
+    }
+    
+    @Test
+    public void testFindSimpleInfoBy() {
+        System.out.println("findSimpleInfoBy");
+        
+        String[] quizIds = new String[4];
+        for (int i = 0; i < 4; i++) {
+            Quiz qi = this.mongoTemplate.save(this.generateQuiz(i));
+            quizIds[i] = qi.getId();
+        }
+        List<QuizSimpleInformations> qsi = this.testedRepo.findSimpleInfoBy()
+                .collect(Collectors.toList());
+        assertThat(qsi).hasSize(4);
+        assertThat(qsi).map(QuizSimpleInformations::getId).containsExactlyInAnyOrder(quizIds);
     }
 
 }

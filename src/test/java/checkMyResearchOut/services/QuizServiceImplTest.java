@@ -39,6 +39,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import checkMyResearchOut.mongoModel.QuizRepository;
+import org.mockito.ArgumentMatchers;
 
 /**
  *
@@ -180,19 +181,54 @@ public class QuizServiceImplTest {
     /**
      * Test of getUnansweredOrUnsuccessfulAnsweredQuestionsNumber method, of class QuizServiceImpl.
      */
+//    @Test
+//    public void testGetUnansweredOrUnsuccessfulAnsweredQuestionsNumber() {
+//        System.out.println("getUnsuccessfulAnsweredQuestionsNumber");
+//        Quiz quiz = new Quiz("qi", "quiz", "quizDesc");
+//        CMROUser user = new CMROUser("user@mail", "lname", "fname", "encpwd");
+//
+//        given(this.questionRepo.countByQuizName(quiz.getName())).willReturn(3L);
+//        given(this.answerRepo.countByQuizNameAndUserAndSuccessIsTrue(quiz.getName(), user)).willReturn(2L);
+//
+//        Long n = this.testedSvc.getUnansweredOrUnsuccessfulAnsweredQuestionsNumber(quiz, user);
+//        assertThat(n).isEqualTo(1L);
+//        Mockito.verify(this.questionRepo, Mockito.times(1)).countByQuizName(quiz.getName());
+//        Mockito.verify(this.answerRepo, Mockito.times(1)).countByQuizNameAndUserAndSuccessIsTrue(quiz.getName(), user);
+//    }
+    
     @Test
-    public void testGetUnansweredOrUnsuccessfulAnsweredQuestionsNumber() {
-        System.out.println("getUnsuccessfulAnsweredQuestionsNumber");
+    public void testGetQuizUserInfo() {
+        System.out.println("getQuizUserInfo");
+        
         Quiz quiz = new Quiz("qi", "quiz", "quizDesc");
         CMROUser user = new CMROUser("user@mail", "lname", "fname", "encpwd");
-
-        given(this.questionRepo.countByQuizName(quiz.getName())).willReturn(3L);
-        given(this.answerRepo.countByQuizNameAndUserAndSuccessIsTrue(quiz.getName(), user)).willReturn(2L);
-
-        Long n = this.testedSvc.getUnansweredOrUnsuccessfulAnsweredQuestionsNumber(quiz, user);
-        assertThat(n).isEqualTo(1L);
-        Mockito.verify(this.questionRepo, Mockito.times(1)).countByQuizName(quiz.getName());
-        Mockito.verify(this.answerRepo, Mockito.times(1)).countByQuizNameAndUserAndSuccessIsTrue(quiz.getName(), user);
+        List<AnswerProposition> propositions = List.of(new AnswerProposition("Q1-P1", true),
+                new AnswerProposition("Q1-P2", false));
+        List<Question> questions = List.of(
+                TestInstanceGenerationUtil.withId(new Question(quiz.getName(), "Q", propositions, "aQ", "pQ"), "qID1"),
+                TestInstanceGenerationUtil.withId(new Question(quiz.getName(), "Q", propositions, "aQ", "pQ"), "qID2"),
+                TestInstanceGenerationUtil.withId(new Question(quiz.getName(), "Q", propositions, "aQ", "pQ"), "qID3"),
+                TestInstanceGenerationUtil.withId(new Question(quiz.getName(), "Q", propositions, "aQ", "pQ"), "qID4")
+        );
+        //Q1: answered correctly, Q2: answered badly, and early, Q3: answered badly long time ago, Q4: not answered
+        List<CMROUserAnswer> answers = List.of(
+                TestInstanceGenerationUtil.withAttemptInfo(new CMROUserAnswer(questions.get(0), user, true), 1, LocalDateTime.now().minusMinutes(30).toString()),
+                TestInstanceGenerationUtil.withAttemptInfo(new CMROUserAnswer(questions.get(1), user, false), 1, LocalDateTime.now().minusMinutes(1).toString()),
+                TestInstanceGenerationUtil.withAttemptInfo(new CMROUserAnswer(questions.get(2), user, false), 1, LocalDateTime.now().minusMinutes(30).toString())
+        );
+        given(this.answerRepo.findByQuizNameAndUser(quiz.getName(), user)).will(iom -> answers.stream());
+        given(this.questionRepo.countByQuizNameAndIdNotIn(Mockito.eq(quiz.getName()), Mockito.any())).willReturn(2L);
+        
+        QuizUserInfo qui = this.testedSvc.getQuizUserInfo(quiz.getName(), user);
+        Mockito.verify(this.answerRepo, Mockito.times(1)).findByQuizNameAndUser(quiz.getName(), user);
+        Mockito.verify(this.questionRepo, Mockito.times(1)).countByQuizNameAndIdNotIn(
+                Mockito.eq(quiz.getName()), 
+                ArgumentMatchers.argThat(list -> list.size() == 2 && list.containsAll(List.of("qID1", "qID2"))));
+        assertThat(qui).isNotNull();
+        assertThat(qui.getLastAnswerSuccess()).isNull();
+        assertThat(qui.getSuccessfullyAnsweredQuestions()).isEqualTo(1);
+        assertThat(qui.isCanAnswerAQuestion()).isTrue();
+        
     }
 
     /**
