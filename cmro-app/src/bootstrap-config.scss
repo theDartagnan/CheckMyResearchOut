@@ -1,0 +1,15 @@
+@use "sass:map";
+@import "bootstrap";
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/mixins";
+
+// main {
+//   padding-top: 20px;
+// }
+//
+// @media (max-width: map.get($grid-breakpoints, "sm")) {
+//   main {
+//     padding-top: 50px;
+//   }
+// }

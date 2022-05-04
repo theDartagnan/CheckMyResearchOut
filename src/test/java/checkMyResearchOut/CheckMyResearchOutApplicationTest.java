@@ -18,12 +18,14 @@
  */
 package checkMyResearchOut;
 
+import checkMyResearchOut.configuration.MongoConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
@@ -31,8 +33,8 @@ import org.springframework.test.context.ActiveProfiles;
  * @author Rémi Venant
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-//@Import(MongoConfiguration.class)
-@ActiveProfiles("mongo-test")
+@Import(MongoConfiguration.class)
+@ActiveProfiles({"mongo-test", "disable-security"})
 public class CheckMyResearchOutApplicationTest {
 
     public CheckMyResearchOutApplicationTest() {

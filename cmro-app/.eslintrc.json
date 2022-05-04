@@ -1,0 +1,34 @@
+{
+  "plugins": ["@babel", "jest"],
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "ecmaVersion": 11,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "overrides": [{
+    "files": ["*.jsx", "*.js"]
+  }],
+  "env": {
+    "browser": true,
+    "jest/globals": true
+  },
+  "globals": {
+    "APP_ENV": "readonly",
+    "fetchMock": "readonly"
+  },
+  "extends": ["airbnb", "airbnb/hooks", "plugin:jest/recommended", "plugin:jest/style"],
+  "rules": {
+    "no-console": ["error", {
+      "allow": ["warn", "error"]
+    }],
+    "no-underscore-dangle": "off",
+    "jsx-a11y/label-has-associated-control": ["error", {
+      "assert": "either",
+      "depth": 4
+    }],
+    "react/static-property-placement": ["warn", "static public field"]
+  }
+}
