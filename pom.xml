@@ -11,7 +11,7 @@
     <artifactId>CheckMyResearchOut</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>Check My Research Out</name>
-    <description>A little game to make researchers talk each other!</description>
+    <description>A little game to make researchers talk with each other!</description>
     <url>http://www.atierf.fr</url>
     <inceptionYear>2022</inceptionYear>
     

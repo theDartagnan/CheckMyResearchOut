@@ -2,7 +2,7 @@
   "name": "check-my-research-out",
   "appTitle": "Viens voir mes recherches !",
   "version": "1.0.0",
-  "description": "A little game to make researchers talk each other!",
+  "description": "A little game to make researchers talk with each other!",
   "main": "index.jsx",
   "scripts": {
     "test": "jest",
