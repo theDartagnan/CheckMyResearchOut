@@ -130,7 +130,7 @@ public class AnswerServiceImpl implements AnswerService {
             userRank++;
         }
         // Set userRank to -1 if the user is not present in the rankings
-        if (userRank >= userIds.size()) {
+        if (userRank > userIds.size()) {
             userRank = -1;
         }
         // Retrieve all users public info from the rank by userId

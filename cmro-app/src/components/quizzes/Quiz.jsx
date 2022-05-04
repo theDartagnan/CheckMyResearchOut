@@ -15,19 +15,15 @@ function Quiz() {
   const { globalModelHdlr } = useContext(RootStore);
 
   useEffect(() => {
-    globalModelHdlr.attemptAutoLogin(false).then(() => {
-      if (!globalModelHdlr.loggedUser.isReady) {
+    if (!globalModelHdlr.loggedUser.isReady) {
+      globalModelHdlr.attemptAutoLogin().catch(() => {
         navigate('/auth/login');
-        return;
-      }
-      if (globalModelHdlr.currentQuiz.isInit || globalModelHdlr.currentQuiz.name !== quizName) {
-        globalModelHdlr.currentQuiz.fetch({ quizName }).catch(() => {
-          navigate('/quizzes');
-        });
-      }
-    }, (error) => {
-      console.warn(`Quiz: attempt login failed: ${error.message}`);
-    });
+      });
+    } else { // force reload
+      globalModelHdlr.currentQuiz.fetch({ quizName }).catch(() => {
+        navigate('/quizzes');
+      });
+    }
   }, [globalModelHdlr, navigate, quizName]);
 
   return (

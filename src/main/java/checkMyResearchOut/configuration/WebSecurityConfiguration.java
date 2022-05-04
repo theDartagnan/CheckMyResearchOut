@@ -25,6 +25,7 @@ import checkMyResearchOut.security.services.RESTTokenBasedRememberMeServices;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -147,7 +148,7 @@ public class WebSecurityConfiguration {
                 .rememberMe(rememberMeCustomizer -> rememberMeCustomizer
                 .rememberMeServices(tokenBasedRememberMeServices))
                 .csrf(csrfCustomizer -> csrfCustomizer.disable()) // Disable CSRF protection
-                .cors().and() // Enable CORS filtering
+                .cors(corsCustomizer -> corsCustomizer.configurationSource(this.corsConfigurationSource())) // Enable CORS filtering
                 .authorizeRequests(authorizeRequestsCustomizer -> authorizeRequestsCustomizer
                 .antMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/v*/rest/users").anonymous()
@@ -164,9 +165,14 @@ public class WebSecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*", "http://127.0.0.1:*", "moz-extension://*"));
+        configuration.setAllowedOriginPatterns(List.of("http://localhost", "http://127.0.0.1:*", "moz-extension://*"));
+        //configuration.setAllowedOrigins(List.of("*"));
+//        configuration.setAllowedOriginPatterns(Arrays.asList(
+//                "http://localhost:*", "http://127.0.0.1:*", "moz-extension://*", "http://172.30.1.210:*"
+//        ));
         configuration.setAllowedMethods(Arrays.asList("OPTIONS", "HEAD", "GET", "POST", "PUT", "PATCH", "DELETE"));
-        configuration.setAllowedHeaders(Arrays.asList("content-type"));
+        configuration.setAllowedHeaders(Arrays.asList("content-type", "x-requested-with"));
+        configuration.setAllowCredentials(Boolean.TRUE);
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

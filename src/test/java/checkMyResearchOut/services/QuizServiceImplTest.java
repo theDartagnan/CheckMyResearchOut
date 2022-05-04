@@ -59,6 +59,8 @@ public class QuizServiceImplTest {
     private CMROUserAnswerRepository answerRepo;
 
     private QuizServiceImpl testedSvc;
+    
+    private final int answerAttemptTimeoutMinutes = 5;
 
     public QuizServiceImplTest() {
     }
@@ -74,7 +76,7 @@ public class QuizServiceImplTest {
     @BeforeEach
     public void setUp() {
         this.mocks = MockitoAnnotations.openMocks(this);
-        this.testedSvc = new QuizServiceImpl(quizRepo, questionRepo, answerRepo, 5);
+        this.testedSvc = new QuizServiceImpl(quizRepo, questionRepo, answerRepo, answerAttemptTimeoutMinutes);
     }
 
     @AfterEach
@@ -228,6 +230,44 @@ public class QuizServiceImplTest {
         assertThat(qui.getLastAnswerSuccess()).isNull();
         assertThat(qui.getSuccessfullyAnsweredQuestions()).isEqualTo(1);
         assertThat(qui.isCanAnswerAQuestion()).isTrue();
+        assertThat(qui.getWaitingMinutesBeforeNextAnswer()).isNull();
+        
+    }
+    
+    @Test
+    public void testGetQuizUserInfoHasToWait() {
+        System.out.println("getQuizUserInfo");
+        
+        Quiz quiz = new Quiz("qi", "quiz", "quizDesc");
+        CMROUser user = new CMROUser("user@mail", "lname", "fname", "encpwd");
+        List<AnswerProposition> propositions = List.of(new AnswerProposition("Q1-P1", true),
+                new AnswerProposition("Q1-P2", false));
+        List<Question> questions = List.of(
+                TestInstanceGenerationUtil.withId(new Question(quiz.getName(), "Q", propositions, "aQ", "pQ"), "qID1"),
+                TestInstanceGenerationUtil.withId(new Question(quiz.getName(), "Q", propositions, "aQ", "pQ"), "qID2"),
+                TestInstanceGenerationUtil.withId(new Question(quiz.getName(), "Q", propositions, "aQ", "pQ"), "qID3"),
+                TestInstanceGenerationUtil.withId(new Question(quiz.getName(), "Q", propositions, "aQ", "pQ"), "qID4")
+        );
+        //Q1: answered correctly, Q2: answered badly, and early (1 min. ago), Q3: answered badly (3 min ago), and early, Q4: answered correctly
+        List<CMROUserAnswer> answers = List.of(
+                TestInstanceGenerationUtil.withAttemptInfo(new CMROUserAnswer(questions.get(0), user, true), 1, LocalDateTime.now().minusMinutes(30).toString()),
+                TestInstanceGenerationUtil.withAttemptInfo(new CMROUserAnswer(questions.get(1), user, false), 1, LocalDateTime.now().minusMinutes(1).toString()),
+                TestInstanceGenerationUtil.withAttemptInfo(new CMROUserAnswer(questions.get(2), user, false), 1, LocalDateTime.now().minusMinutes(3).toString()),
+                TestInstanceGenerationUtil.withAttemptInfo(new CMROUserAnswer(questions.get(3), user, true), 1, LocalDateTime.now().minusMinutes(30).toString())
+        );
+        given(this.answerRepo.findByQuizNameAndUser(quiz.getName(), user)).will(iom -> answers.stream());
+        given(this.questionRepo.countByQuizNameAndIdNotIn(Mockito.eq(quiz.getName()), Mockito.any())).willReturn(0L);
+        
+        QuizUserInfo qui = this.testedSvc.getQuizUserInfo(quiz.getName(), user);
+        Mockito.verify(this.answerRepo, Mockito.times(1)).findByQuizNameAndUser(quiz.getName(), user);
+        Mockito.verify(this.questionRepo, Mockito.times(1)).countByQuizNameAndIdNotIn(
+                Mockito.eq(quiz.getName()), 
+                ArgumentMatchers.argThat(list -> list.size() == 4 && list.containsAll(List.of("qID1", "qID2", "qID3", "qID4"))));
+        assertThat(qui).isNotNull();
+        assertThat(qui.getLastAnswerSuccess()).isNull();
+        assertThat(qui.getSuccessfullyAnsweredQuestions()).isEqualTo(2);
+        assertThat(qui.isCanAnswerAQuestion()).isFalse();
+        assertThat(qui.getWaitingMinutesBeforeNextAnswer()).isEqualTo(this.answerAttemptTimeoutMinutes - 3);
         
     }
 

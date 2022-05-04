@@ -113,7 +113,7 @@ public interface QuizService {
      * @param questionId
      * @return
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER')") // Warning, for a better security enforcment, only admin should access this service. However it is used to answer a question
     Question getQuestionById(String quizName, String questionId) throws IllegalArgumentException, NoSuchElementException;
 
     /**

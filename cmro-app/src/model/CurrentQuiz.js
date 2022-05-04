@@ -149,14 +149,14 @@ class CurrentQuiz extends AbstractRESTEntity {
     }
     if (!this._currentQuestionPromise) {
       const p = getRandomQuestionToAnswerForMyself({ quizName: this._name })
-        .then((rawQuestion) => new Question(
+        .then((rawQuestion) => (rawQuestion ? new Question(
           rawQuestion.id,
           rawQuestion.quizName,
           rawQuestion.title,
           rawQuestion.answerPropositions,
           rawQuestion.author,
           rawQuestion.publication,
-        ));
+        ) : null));
       runInAction(() => {
         this._currentQuestionPromise = p;
       });
@@ -165,6 +165,7 @@ class CurrentQuiz extends AbstractRESTEntity {
         runInAction(() => {
           this._currentQuestion = question;
         });
+        return question;
       } catch (error) {
         console.warn(`Unable to retrieve the question: ${error.message}`);
         throw error;

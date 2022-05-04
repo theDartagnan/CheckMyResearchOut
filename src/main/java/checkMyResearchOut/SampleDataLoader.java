@@ -67,7 +67,7 @@ public class SampleDataLoader implements CommandLineRunner {
     public SampleDataLoader(CMROUserRepository userRepo, QuizRepository quizRepo,
             QuestionRepository questionRepo, CMROUserAnswerRepository answerRepo,
             PasswordEncodingService passwordEncodingSvc,
-            @Value("${mmiLibraryServer.sampleData.alwayResetData:false}") boolean alwayResetData) {
+            @Value("${checkMyResearchOut.sampleData.alwayResetData:false}") boolean alwayResetData) {
         this.userRepo = userRepo;
         this.quizRepo = quizRepo;
         this.questionRepo = questionRepo;
@@ -192,8 +192,8 @@ public class SampleDataLoader implements CommandLineRunner {
         answers.add(CMROUserAnswer.createSampleAnswer(questions.get(2), users.get(0), true, 1, startTime.plusMinutes(10)));
         answers.add(CMROUserAnswer.createSampleAnswer(questions.get(3), users.get(0), false, 1, startTime.plusMinutes(15)));
         //User 2 answered 2 of the questions (Q1, Q4), Q1 correctly, Q4 badly, with one attempt each and the last one tried now
-        answers.add(CMROUserAnswer.createSampleAnswer(questions.get(0), users.get(0), true, 1, startTime));
-        answers.add(CMROUserAnswer.createSampleAnswer(questions.get(3), users.get(0), false, 1, startTime.plusHours(1)));
+        answers.add(CMROUserAnswer.createSampleAnswer(questions.get(0), users.get(1), true, 1, startTime));
+        answers.add(CMROUserAnswer.createSampleAnswer(questions.get(3), users.get(1), false, 1, startTime.plusHours(1)));
         //User 3 did not answer any question
         return StreamSupport.stream(this.answerRepo.saveAll(answers).spliterator(), false)
                 .collect(Collectors.toList());

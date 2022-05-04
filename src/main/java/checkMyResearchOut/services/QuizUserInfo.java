@@ -28,6 +28,7 @@ public class QuizUserInfo implements Serializable {
 
     private long successfullyAnsweredQuestions;
     private boolean canAnswerAQuestion;
+    private Long waitingMinutesBeforeNextAnswer;
     private Boolean lastAnswerSuccess;
 
     public QuizUserInfo() {
@@ -39,6 +40,7 @@ public class QuizUserInfo implements Serializable {
     public QuizUserInfo(long successfullyAnsweredQuestions, boolean canAnswerAQuestion) {
         this.successfullyAnsweredQuestions = successfullyAnsweredQuestions;
         this.canAnswerAQuestion = canAnswerAQuestion;
+        this.waitingMinutesBeforeNextAnswer = null;
         this.lastAnswerSuccess = null;
     }
 
@@ -56,6 +58,14 @@ public class QuizUserInfo implements Serializable {
 
     public void setCanAnswerAQuestion(boolean canAnswerAQuestion) {
         this.canAnswerAQuestion = canAnswerAQuestion;
+    }
+
+    public Long getWaitingMinutesBeforeNextAnswer() {
+        return waitingMinutesBeforeNextAnswer;
+    }
+
+    public void setWaitingMinutesBeforeNextAnswer(Long waitingMinutesBeforeNextAnswer) {
+        this.waitingMinutesBeforeNextAnswer = waitingMinutesBeforeNextAnswer;
     }
 
     public Boolean getLastAnswerSuccess() {

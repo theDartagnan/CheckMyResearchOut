@@ -18,6 +18,7 @@
  */
 package checkMyResearchOut.controllers;
 
+import checkMyResearchOut.SampleDataLoader;
 import checkMyResearchOut.mongoModel.CMROUser;
 import checkMyResearchOut.mongoModel.CMROUserAnswer;
 import checkMyResearchOut.mongoModel.Question;
@@ -36,7 +37,10 @@ import com.fasterxml.jackson.annotation.JsonView;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -55,7 +59,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/rest/quizzes")
 public class QuizController {
-
+    private static final Log LOG = LogFactory.getLog(QuizController.class);
+    
     private final QuizService quizSvc;
 
     private final CMROUserService userSvc;
@@ -70,9 +75,10 @@ public class QuizController {
     }
 
     @GetMapping
-    @JsonView(QuizViews.Normal.class)
-    public Stream<QuizSimpleInformations> getQuizzes(@PathVariable String quizName) {
-        return this.quizSvc.getQuizzesWithSimpleInformations();
+    public List<QuizSimpleInformations> getQuizzes() {
+        List<QuizSimpleInformations> l = this.quizSvc.getQuizzesWithSimpleInformations().collect(Collectors.toList());
+        LOG.info("Quiz list size: " + l.size());
+        return l;
     }
 
     @PostMapping

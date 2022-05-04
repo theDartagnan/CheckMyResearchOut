@@ -107,7 +107,7 @@ module.exports = {
   devtool: 'inline-source-map',
   devServer: {
     port: 3000,
-    host: 'local-ip', // Accessible uniquement d'une ip localhost (4 ou 6)
+    host: '127.0.0.1', // 'local-ip', // Accessible uniquement d'une ip localhost (4 ou 6)
     historyApiFallback: true, // Evite d'afficher une page 404 plutot que la page index.html
     // quand on utilie HTML5 History API
     static: {

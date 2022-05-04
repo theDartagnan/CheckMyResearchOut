@@ -347,7 +347,8 @@ export async function answerQuestionForMyself(
   }
   return {
     successfullyAnsweredQuestions: 2,
-    canAnswerAQuestion: true,
+    canAnswerAQuestion: propositionIndices.length >= 1,
+    waitingMinutesBeforeNextAnswer: propositionIndices.length < 1 ? 2 : null,
     lastAnswerSuccess: propositionIndices.length > 2,
   };
 }

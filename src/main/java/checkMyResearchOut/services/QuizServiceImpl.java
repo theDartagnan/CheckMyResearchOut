@@ -38,8 +38,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import checkMyResearchOut.mongoModel.QuizRepository;
 import checkMyResearchOut.mongoModel.QuizSimpleInformations;
-import java.util.concurrent.atomic.AtomicLong;
+import java.time.temporal.ChronoUnit;
 import java.util.stream.Stream;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
@@ -48,6 +50,8 @@ import java.util.stream.Stream;
 @Service
 public class QuizServiceImpl implements QuizService {
 
+    private static final Log LOG = LogFactory.getLog(QuizServiceImpl.class);
+    
     private final QuizRepository quizRepo;
 
     private final QuestionRepository questionRepo;
@@ -220,23 +224,39 @@ public class QuizServiceImpl implements QuizService {
         if (quizName == null || user == null) {
             throw new IllegalArgumentException("Quiz name nor user cannot be null.");
         }
-        final AtomicLong successfullyAnsweredQuestions = new AtomicLong(0);
-        // Compute a set of question id the user has already successfully answered or the user's last attempt is too early
-        // and count successfully answered questions
-        final Set<String> questionIdsToRemove = this.answerRepo.findByQuizNameAndUser(quizName, user)
+        // From the user's answer : compute the number of successful question, get the time of
+        // the oldest "too early" badly answered question and a set of question id
+        // the user has already successfully answered or the user's last attempt is too early
+        LocalDateTime now = LocalDateTime.now();
+        // Retrieve the list of question the user has already successfully answered or the user's last attempt is too early
+        final List<CMROUserAnswer> answers = this.answerRepo.findByQuizNameAndUser(quizName, user)
                 .filter(a -> a.isSuccess()
-                || a.getLastAttemptDateTime().plusMinutes(this.answerAttemptTimeoutMinutes).isAfter(LocalDateTime.now()))
-                .map(a -> {
-                    if (a.isSuccess()) {
-                        successfullyAnsweredQuestions.incrementAndGet();
-                    }
-                    return a.getQuestionId();
-                })
-                .collect(Collectors.toSet());
+                || a.getLastAttemptDateTime().plusMinutes(this.answerAttemptTimeoutMinutes).isAfter(now))
+                .collect(Collectors.toList());
+        // compute number of successfull question and the last "too early" badly answered question 
+        long successfullyAnsweredQuestions = 0;
+        LocalDateTime oldestTooEarlyAnsweredQuestion = null;
+        for (CMROUserAnswer answer : answers) {
+            if (answer.isSuccess()) { // answer is a success
+                successfullyAnsweredQuestions++;
+            } else if (oldestTooEarlyAnsweredQuestion == null 
+                    || oldestTooEarlyAnsweredQuestion.isAfter(answer.getLastAttemptDateTime())) { 
+                oldestTooEarlyAnsweredQuestion = answer.getLastAttemptDateTime();
+            }
+        }
+        // Compute a set of question id the user has already successfully answered or the user's last attempt is too early
+        final Set<String> questionIdsToRemove = answers.stream()
+                .map(CMROUserAnswer::getQuestionId).collect(Collectors.toSet());
         // count questions the user can answer
         final long answerableQuestionsNum = this.questionRepo.countByQuizNameAndIdNotIn(quizName, questionIdsToRemove);
 
-        return new QuizUserInfo(successfullyAnsweredQuestions.get(), answerableQuestionsNum > 0);
+        final QuizUserInfo quizUserInfo = new QuizUserInfo(successfullyAnsweredQuestions, answerableQuestionsNum > 0);
+        if (answerableQuestionsNum <= 0 && oldestTooEarlyAnsweredQuestion != null) {
+            //compute waiting time in minutes
+            final long waitingTimeMinute = this.answerAttemptTimeoutMinutes - ChronoUnit.MINUTES.between(oldestTooEarlyAnsweredQuestion, now);
+            quizUserInfo.setWaitingMinutesBeforeNextAnswer(waitingTimeMinute > 0 ? waitingTimeMinute : 0);
+        }
+        return quizUserInfo;
     }
 
     @Override

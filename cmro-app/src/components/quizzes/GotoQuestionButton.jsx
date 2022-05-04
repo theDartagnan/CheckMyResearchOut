@@ -6,6 +6,15 @@ import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBan } from '@fortawesome/free-solid-svg-icons';
 
+function getQuizMinuteToWaitTime(waitingMinutesBeforeNextAnswer) {
+  if (!waitingMinutesBeforeNextAnswer) {
+    return 'quelques minutes';
+  } if (waitingMinutesBeforeNextAnswer === 1) {
+    return '1 minute';
+  }
+  return `${waitingMinutesBeforeNextAnswer} minutes`;
+}
+
 function GotoQuestionButton({
   quiz, gotoQuestion, otherQuestion, className,
 }) {
@@ -18,20 +27,23 @@ function GotoQuestionButton({
         <Button variant="primary" className={className}>{btnTxt}</Button>
       </LinkContainer>
     );
-  } if (quiz.quizUserInfo.successfullyAnsweredQuestions < quiz.questionsNumber) {
+  }
+  if (quiz.quizUserInfo.successfullyAnsweredQuestions < quiz.questionsNumber) {
     return (
       <Button variant="danger" disabled className={className}>
         <FontAwesomeIcon icon={faBan} className="me-2" />
         Vous ne pouvez pas répondre tout de suite à de nouvelle question,&nbsp;
-        merci de revenir dans quelques minutes
+        merci de revenir dans
+        {' '}
+        {getQuizMinuteToWaitTime(quiz.quizUserInfo.waitingMinutesBeforeNextAnswer)}
+        .
       </Button>
     );
   }
   return (
     <Button variant="danger" disabled className={className}>
       <FontAwesomeIcon icon={faBan} className="me-2" />
-      Vous ne pouvez pas répondre tout de suite à de nouvelle question,&nbsp;
-      merci de revenir dans quelques minutes
+      Vous avez fini ce quiz. Félicitations !
     </Button>
   );
 }
@@ -43,6 +55,7 @@ GotoQuestionButton.propTypes = {
     quizUserInfo: PropTypes.shape({
       canAnswerAQuestion: PropTypes.bool.isRequired,
       successfullyAnsweredQuestions: PropTypes.number.isRequired,
+      waitingMinutesBeforeNextAnswer: PropTypes.number,
     }).isRequired,
   }).isRequired,
   gotoQuestion: PropTypes.func,

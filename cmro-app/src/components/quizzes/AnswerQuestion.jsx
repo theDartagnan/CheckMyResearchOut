@@ -48,7 +48,18 @@ function _QuizQuestionForm({ question, onSubmit, onAnswering }) {
                   </Form.Group>
                 ))
               }
-              <LoadingButton className="mt-4" variant="primary" type="submit" loading={onAnswering}>
+              <Alert className="mt-4 mb-3" variant="warning">
+                <Alert.Heading>Où trouver la réponse ?</Alert.Heading>
+                <hr />
+                <p className="mb-0">
+                  Va découvrir le poster de &nbsp;
+                  <strong>{question.author}</strong>
+                  &nbsp;:&nbsp;
+                  {question.publication}
+                  &nbsp;!
+                </p>
+              </Alert>
+              <LoadingButton className="mb-3" variant="primary" type="submit" loading={onAnswering}>
                 Répondre au questionnaire
               </LoadingButton>
             </fieldset>
@@ -132,7 +143,11 @@ function AnswerQuestion() {
       // Autologin succeeded, attempt to renew the question if necessairy
       if (!state.questionAnswered) {
         try {
-          return globalModelHdlr.currentQuiz.renewQuestion();
+          return globalModelHdlr.currentQuiz.renewQuestion().then((question) => {
+            if (!question) {
+              navigate('/');
+            }
+          });
         } catch (error) {
           console.warn(`AnswerQuestion: cannot auto retrieve the question: ${error.message}`);
         }

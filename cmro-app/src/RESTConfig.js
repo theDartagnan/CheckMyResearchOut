@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const slashMatcher = /\/$/g;
-export const ROOT_URL = `${APP_ENV.API_BASE_URL.replace(slashMatcher, '')}/rest`;
+export const ROOT_URL = `${APP_ENV.API_BASE_URL.replace(slashMatcher, '')}`;
 
 // export const TIME_BEFORE_REFRESH_MS = 10 * 1000;
 
@@ -17,6 +17,9 @@ export const ROOT_AX = axios.create({
  */
 export function configureNetworkErrorHandler(handler) {
   ROOT_AX.interceptors.response.use((response) => response, (error) => {
+    if (error.config?.silentOnError) {
+      return Promise.reject(error);
+    }
     let title = null;
     let details = null;
     if (error.response) {
