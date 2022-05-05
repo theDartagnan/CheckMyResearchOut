@@ -137,6 +137,7 @@ public class WebSecurityConfiguration {
     public SecurityFilterChain enabledSecfilterChain(HttpSecurity http,
             RESTUsernamePasswordAuthenticationFilter restUsernamePasswordAuthenticationFilter,
             @Value("${server.servlet.session.cookie.name:JSESSIONID}") String cookieName,
+            @Value("${checkMyResearchOut.server.cors-enabled:true}") Boolean corsEnabled,
             RESTTokenBasedRememberMeServices tokenBasedRememberMeServices) throws Exception {
         return http
                 .exceptionHandling(exceptionHandlingCustomizer -> exceptionHandlingCustomizer.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
@@ -148,7 +149,13 @@ public class WebSecurityConfiguration {
                 .rememberMe(rememberMeCustomizer -> rememberMeCustomizer
                 .rememberMeServices(tokenBasedRememberMeServices))
                 .csrf(csrfCustomizer -> csrfCustomizer.disable()) // Disable CSRF protection
-                .cors(corsCustomizer -> corsCustomizer.configurationSource(this.corsConfigurationSource())) // Enable CORS filtering
+                .cors(corsCustomizer -> {
+                    if (corsEnabled) {
+                        corsCustomizer.configurationSource(this.corsConfigurationSource());
+                    } else {
+                        corsCustomizer.disable();
+                    }
+                }) // Enable CORS filtering
                 .authorizeRequests(authorizeRequestsCustomizer -> authorizeRequestsCustomizer
                 .antMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/v*/rest/users").anonymous()
