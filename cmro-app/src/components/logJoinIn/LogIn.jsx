@@ -109,13 +109,6 @@ function LogIn({ attemptLogin }) {
           </LinkContainer>
         </Col>
       </Row>
-      <Row className="mt-1">
-        <Col>
-          <LinkContainer to="/auth-mgmt/revalidate">
-            <Button variant="link" className="text-muted">Je n&lsquo;ai pas reçu de courriel de validation ?</Button>
-          </LinkContainer>
-        </Col>
-      </Row>
       {
         state.error && (
           <Row className="mt-3">

@@ -35,7 +35,6 @@ class GlobalModelHandler {
     await createUser({
       mail, password, firstname, lastname,
     }, true);
-    await startAccountValidation({ encodedMail: encodeURI(mail) }, true);
     return true;
   }
 

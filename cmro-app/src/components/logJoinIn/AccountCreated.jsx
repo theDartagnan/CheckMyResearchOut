@@ -13,13 +13,12 @@ function AccountCreated() {
         <Alert variant="success">
           <Alert.Heading>Compte créé</Alert.Heading>
           <p>
-            Votre compte a bien été créé. Vous devriez recevoir un courriel
-            d&lsquo;ici peu pour le valider.
+            Votre compte a bien été créé. Vous pouvez vous connecter dès maintenant.
           </p>
           <hr />
           <p className="mb-0">
-            <LinkContainer to="/auth-mgmt/revalidate">
-              <Button variant="link" className="ms-auto">Je n&lsquo;ai pas reçu de courriel ?</Button>
+            <LinkContainer to="/auth/login">
+              <Button variant="link" className="ms-auto">Se connecter</Button>
             </LinkContainer>
           </p>
         </Alert>

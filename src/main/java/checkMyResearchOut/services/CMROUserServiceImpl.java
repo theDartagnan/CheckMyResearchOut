@@ -83,6 +83,7 @@ public class CMROUserServiceImpl implements CMROUserService {
                     lastname.trim().toLowerCase(),
                     firstname.trim().toLowerCase(),
                     this.passwordSvc.encodePassword(clearPassword));
+            user.setValidated(Boolean.TRUE);
             user = this.userRepo.save(user);
             return user;
         } catch (ConstraintViolationException ex) {
