@@ -37,7 +37,7 @@ export async function createUser({
   if (!mail || !firstname || !lastname || !password) {
     throw new Error('Missing mail, firstname, lastname or password.');
   }
-  const res = await ROOT_AX.post(`${ROOT_URL}/users/myself`, {
+  const res = await ROOT_AX.post(`${ROOT_URL}/users`, {
     mail, firstname, lastname, password,
   }, {
     silentOnError,
