@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import classNames from 'classnames';
 // import PropTypes from 'prop-types';
 import { observer } from 'mobx-react';
@@ -20,6 +20,17 @@ import logoPict from '../assets/logo.png';
 function AppNavbar() {
   const navigate = useNavigate();
   const { globalModelHdlr } = useContext(RootStore);
+  const [expanded, setExpanded] = useState(false);
+
+  const onToggleNavbar = (e) => {
+    setExpanded(e);
+  };
+
+  const traceClick = (e) => {
+    if (e.target?.nodeName === 'A' && expanded) {
+      setExpanded(false);
+    }
+  };
 
   const logout = () => {
     if (!globalModelHdlr.loggedUser.isReady) {
@@ -36,7 +47,16 @@ function AppNavbar() {
     ? globalModelHdlr.currentQuiz.fullName : APP_ENV.APP_TITLE;
 
   return (
-    <Navbar expand="sm" fixed="top" bg="dark" variant="dark" className="py-1">
+    <Navbar
+      expand="sm"
+      fixed="top"
+      bg="dark"
+      variant="dark"
+      className="py-1"
+      expanded={expanded}
+      onToggle={onToggleNavbar}
+      onClick={traceClick}
+    >
       <Navbar.Brand as={Link} to="/">
         <img
           src={logoPict}
@@ -56,6 +76,9 @@ function AppNavbar() {
               <Nav className="w-100">
                 <Nav.Link as={Link} to="/quizzes">
                   Tous les quiz
+                </Nav.Link>
+                <Nav.Link as={Link} to="/about">
+                  Mentions légales
                 </Nav.Link>
                 <Dropdown as={Nav.Item} className={classNames('ms-sm-auto', style.usermenu)}>
                   <Dropdown.Toggle as={Nav.Link}>
@@ -82,11 +105,19 @@ function AppNavbar() {
             </Navbar.Collapse>
           </>
         ) : (
-          <Nav className="w-100">
-            <Nav.Link as={Link} to="/auth/login" className="ms-sm-auto">
-              Se connecter | Créer son compte
-            </Nav.Link>
-          </Nav>
+          <>
+            <Navbar.Toggle aria-controls="ApplicationNavbar" />
+            <Navbar.Collapse id="ApplicationNavbar">
+              <Nav className="w-100">
+                <Nav.Link as={Link} to="/auth/login" className="ms-sm-auto">
+                  Se connecter | Créer son compte
+                </Nav.Link>
+                <Nav.Link as={Link} to="/about">
+                  Mentions légales
+                </Nav.Link>
+              </Nav>
+            </Navbar.Collapse>
+          </>
         )
       }
     </Navbar>

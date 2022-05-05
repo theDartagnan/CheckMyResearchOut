@@ -26,6 +26,7 @@ import AccountValidationResendMail from './components/authMgmt/AccountValidation
 import AccountValidation from './components/authMgmt/AccountValidation';
 import PasswordRenewal from './components/authMgmt/PasswordRenewal';
 import PasswordRenew from './components/authMgmt/PasswordRenew';
+import About from './components/about/About';
 
 import { setErrorManager } from './services/RESTTestEndpoints';
 
@@ -56,6 +57,7 @@ function App() {
                 <Route path="/auth-mgmt/validate" element={<AccountValidation />} />
                 <Route path="/auth-mgmt/password-renewal" element={<PasswordRenewal />} />
                 <Route path="/auth-mgmt/renew-password" element={<PasswordRenew />} />
+                <Route path="/about" element={<About />} />
                 {/* <Route path="/test/*" element={<MembersView />} /> */}
               </Routes>
             </Container>
