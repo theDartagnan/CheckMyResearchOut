@@ -156,7 +156,7 @@ public class WebSecurityConfiguration {
                 .antMatchers(HttpMethod.POST, "/api/v*/rest/users-accounts/validation", "/api/v*/rest/users-accounts/validate",
                         "/api/v*/rest/users-accounts/password-renewal", "/api/v*/rest/users-accounts/password-renew").anonymous()
                 .antMatchers("/api/v*/**").authenticated()
-                .antMatchers(HttpMethod.GET, "/static/**").permitAll()
+                .antMatchers(HttpMethod.GET).permitAll()
                 .anyRequest().denyAll()) // Any other request refused
 
                 .build();
