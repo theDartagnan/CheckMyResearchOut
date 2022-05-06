@@ -61,7 +61,11 @@ class LoggedUser extends AbstractRESTEntity {
 
   async login({ mail, password, rememberMe }, silentOnError = false) {
     if (!this.isInit) {
-      throw new Error('User must is already logged in');
+      if (this.isPending) {
+        console.warn('Attempt to log while is loging...');
+        return;
+      }
+      throw new Error('User is already logged in');
     }
     runInAction(() => {
       this.reset();
