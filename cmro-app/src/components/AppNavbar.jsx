@@ -15,7 +15,7 @@ import RootStore from '../RootStore';
 
 import style from './AppNavbar.scss';
 
-import logoPict from '../assets/logo.png';
+import logoPict from '../assets/logoApp.png'; // 812*288. Ratio l/L = 2,82
 
 function AppNavbar() {
   const navigate = useNavigate();
@@ -60,7 +60,7 @@ function AppNavbar() {
       <Navbar.Brand as={Link} to="/">
         <img
           src={logoPict}
-          width="30"
+          width="84.6"
           height="30"
           className="d-inline-block align-top"
           alt={`${APP_ENV.APP_TITLE} Logo`}
