@@ -7,11 +7,11 @@ body{
   padding-top: 40px + 4*2 + 12;
 }
 
-// @media (min-width: map.get($grid-breakpoints, "md")) and (max-width: map.get($grid-breakpoints, "xl")) {
-//   body{
-//     padding-top: 64px + 4*2 + 12;
-//   }
-// }
+ @media (max-width: 290px) {
+   body{
+    padding-top: 64px + 4*2 + 12;
+  }
+}
 
 /* Since user menu is align to right, we need to force position of the gropdown-menu */
 .usermenu {
