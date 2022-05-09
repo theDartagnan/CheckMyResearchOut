@@ -24,7 +24,7 @@ function Quiz() {
         navigate('/quizzes');
       });
     }
-  }, [globalModelHdlr, navigate, quizName]);
+  }, [globalModelHdlr, globalModelHdlr.loggedUser.isReady, navigate, quizName]);
 
   return (
     <Row className="justify-content-md-center">
